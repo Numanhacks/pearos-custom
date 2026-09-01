@@ -525,6 +525,21 @@ void MainWindow::setupWelcomeContent() {
         place(addButton(tr("GPU Drivers "), QStringLiteral("video-display"), false, []() {
             QProcess::startDetached(QStringLiteral("hyprvisor-gui"), QStringList());
         }));
+        place(addButton(tr("Surface Support "), QStringLiteral("computer-laptop"), false, []() {
+            QProcess::startDetached(QStringLiteral("konsole"),
+                QStringList() << QStringLiteral("-e") << QStringLiteral("bash") << QStringLiteral("-c")
+                    << QStringLiteral("pkexec /usr/local/bin/install-surface-support; read -n1 -p 'Press any key to close...'"));
+        }));
+        place(addButton(tr("Apply UI Polish "), QStringLiteral("applications-graphics"), false, []() {
+            QProcess::startDetached(QStringLiteral("konsole"),
+                QStringList() << QStringLiteral("-e") << QStringLiteral("bash") << QStringLiteral("-c")
+                    << QStringLiteral("pkexec /usr/local/bin/pear-ui-polish; read -n1 -p 'Press any key to close...'"));
+        }));
+        place(addButton(tr("Auto Detect Drivers "), QStringLiteral("preferences-system"), false, []() {
+            QProcess::startDetached(QStringLiteral("konsole"),
+                QStringList() << QStringLiteral("-e") << QStringLiteral("bash") << QStringLiteral("-c")
+                    << QStringLiteral("pkexec chwd -a; read -n1 -p 'Press any key to close...'"));
+        }));
         if (!isLiveIso_)
             place(addButton(tr("YouTube "), QStringLiteral("assets/youtube.svg"), true,
                              []() { open_url(QStringLiteral("https://youtube.com/pearOS")); }));

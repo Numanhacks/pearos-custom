@@ -5,6 +5,7 @@ amd-ucode
 arch-install-scripts
 archlinux-keyring
 avahi
+fwupd
 b43-fwcutter
 base
 bash-completion
@@ -28,7 +29,7 @@ diffutils
 dmidecode
 dmraid
 dnsmasq
-#dolphin
+dolphin
 dosfstools
 e2fsprogs
 edk2-shell
@@ -97,9 +98,15 @@ nbd
 ndisc6
 net-tools
 networkmanager
+libcamera
 nfs-utils
 nilfs-utils
 noto-fonts
+gst-libav
+gst-plugins-bad
+gst-plugins-good
+gst-plugins-ugly
+gst-vaapi
 noto-fonts-cjk
 noto-fonts-emoji
 apple_cursor
@@ -192,6 +199,11 @@ qt6-wayland
 kvantum
 #xorg
 sddm
+sane-airscan
+print-manager
+cups-pdf
+flatpak
+discover
 zsh
 zsh-completions
 zsh-syntax-highlighting
@@ -229,7 +241,7 @@ calamares
 pear-calamares-config
 python-pip
 system-settings
-#touchegg
+touchegg
 #appmenu-gtk-module
 file-roller
 nautilus
