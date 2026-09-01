@@ -95,12 +95,32 @@ register_rollback "rm -f /etc/sysctl.d/99-macos-memory.conf; sysctl --system >/d
 # ============================================================================
 # 4) zram (50% RAM, zstd, priority 100) — disk swap demoted to priority 10
 # ============================================================================
-log "Setting up zram..."
-bash "$SCRIPT_DIR/setup-zram.sh" || { err "zram setup failed."; exit 1; }
-install -Dm644 "$SCRIPT_DIR/zram-setup.service" /etc/systemd/system/zram-setup.service
-systemctl daemon-reload
-systemctl enable --now zram-setup.service || warn "zram-setup enable failed (will re-run at boot)."
-register_rollback "systemctl disable --now zram-setup.service 2>/dev/null; swapoff /dev/zram0 2>/dev/null; true"
+# zram is provisioned by zram-generator (zram-generator.conf: 50% RAM capped
+# at 8GiB, zstd, priority 100) via its systemd generator at boot. This script
+# only demotes any physical disk swap so zram is always preferred, and makes
+# sure the config file is in place for the installed system.
+log "Ensuring zram-generator config..."
+cat > /etc/systemd/zram-generator.conf <<'ZRAMCONF'
+[zram]
+zram-size = min(ram / 2, 8192)
+compression-algorithm = zstd
+swap-priority = 100
+fs-type = swap
+ZRAMCONF
+# Demote existing disk swap to priority 10 (live + fstab for future boots).
+if grep -vE '^\s*#' /etc/fstab 2>/dev/null | grep -qE '\sswap\s'; then
+    if ! grep -q 'pri=10' /etc/fstab; then
+        sed -i -E 's/^(\s*[^#\s]\S*\s+\S+\s+swap\s+sw\s*)$/\1,pri=10/' /etc/fstab \
+          || sed -i -E 's/^([^#\s]\S*\s+\S+\s+swap\s+sw)(\s.*)?$/\1,pri=10\2/' /etc/fstab
+        log "fstab: disk swap demoted to pri=10 (takes effect next boot)."
+    fi
+fi
+for sw in $(awk '$3=="swap"{print $1}' /proc/swaps | grep -v '^/dev/zram' || true); do
+    swapoff "$sw" 2>/dev/null && swapon -p 10 "$sw" 2>/dev/null \
+        && log "Demoted $sw to priority 10" \
+        || warn "Could not demote $sw (ignored)."
+done
+log "zram: zram-generator will activate /dev/zram0 at boot (priority 100)."
 
 # ============================================================================
 # 5) systemd-oomd — pressure-based killing

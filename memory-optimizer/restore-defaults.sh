@@ -10,7 +10,7 @@ log()  { echo "[restore] $*"; }
 
 # ---- 1) Stop services -------------------------------------------------------
 log "Stopping and disabling services..."
-for svc in app-nap.service zram-setup.service ksm.timer ksm.service systemd-oomd.service; do
+for svc in app-nap.service ksm.timer ksm.service systemd-oomd.service; do
     systemctl disable --now "$svc" 2>/dev/null || true
 done
 systemctl daemon-reload
@@ -36,7 +36,7 @@ rm -f /etc/systemd/oomd.conf.d/50-macos-memory.conf
 rm -f /etc/systemd/system/system.slice.d/50-oomd.conf
 rm -f /etc/systemd/system/user.slice.d/50-oomd.conf
 rm -f /etc/systemd/system/user@.service.d/50-oomd.conf
-rm -f /etc/systemd/system/app-nap.service /etc/systemd/system/zram-setup.service
+rm -f /etc/systemd/system/app-nap.service
 rm -f /etc/systemd/system/ksm.service /etc/systemd/system/ksm.timer
 rm -f /usr/local/lib/app-nap/app-nap-daemon.py
 rm -f /usr/local/sbin/ksm-activate.sh /usr/local/sbin/setup-zram.sh
@@ -47,6 +47,7 @@ if grep -qs '^/dev/zram0 ' /proc/swaps; then
     swapoff /dev/zram0 2>/dev/null || true
     echo 1 > /sys/block/zram0/reset 2>/dev/null || true
 fi
+rm -f /etc/systemd/zram-generator.conf
 
 # ---- 5) Restore backed-up files ------------------------------------------------
 if [[ -d $BACKUP_DIR ]]; then
