@@ -106,6 +106,7 @@ jobs:
             squashfs-tools \
             xorriso \
             e2fsprogs \
+            librsvg \
             git \
             pv \
             rclone \

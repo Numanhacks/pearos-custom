@@ -171,6 +171,39 @@ else
     echo "WARN: could not download macOS cursors"
 fi
 
+echo "Apple branding: replacing pear logos with the Apple logo"
+APPLE_SVG=/root/Apple_logo_black.svg
+apple_ok=0
+if curl -fsSL --retry 3 -o "$APPLE_SVG" \
+    "https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg"; then
+    apple_ok=1
+    # White version for boot splash (plymouth backgrounds are dark): recolor
+    # by setting the presentation fill on the root svg element.
+    sed 's/<svg /<svg fill="white" /' "$APPLE_SVG" > /root/apple-white.svg
+    if command -v rsvg-convert >/dev/null 2>&1; then
+        rsvg-convert -w 512 -h 512 -o /root/apple-white.png /root/apple-white.svg
+        rsvg-convert -w 512 -h 512 -o /root/apple-black.png "$APPLE_SVG"
+    fi
+fi
+
+if [ "$apple_ok" -eq 1 ] && [ -f /root/apple-white.png ]; then
+    # Boot splash: replace pear/macOS-logo images shipped by plymouth themes.
+    find /usr/share/plymouth/themes -type f \( -iname "*pear*.png" -o -iname "*logo*.png" \) 2>/dev/null | \
+        while read -r f; do cp /root/apple-white.png "$f" && echo "branding: $f"; done
+    # Icon theme / pixmaps: every pear-named png/svg icon becomes the Apple logo.
+    find /usr/share/icons /usr/share/pixmaps -type f \( -iname "*pear*.png" -o -iname "*pear*.svg" -o -iname "*pear*.svgz" \) 2>/dev/null | \
+        while read -r f; do
+            case "$f" in
+                *.png)  [ -f /root/apple-black.png ] && cp /root/apple-black.png "$f" ;;
+                *.svg)  cp "$APPLE_SVG" "$f" ;;
+                *.svgz) gzip -c "$APPLE_SVG" > "$f" ;;
+            esac
+            echo "branding: $f"
+        done
+else
+    echo "WARN: Apple logo download/conversion failed — pear logos left in place"
+fi
+
 echo "Applying pearOS optimization stack (memory/performance/desktop-experience)"
 if /usr/local/bin/pearos-opt-bootstrap; then
 	echo "Optimization stack applied"
