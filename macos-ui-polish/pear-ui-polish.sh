@@ -39,10 +39,29 @@ pick_tool() {
     command -v kwriteconfig6 >/dev/null && echo kwriteconfig6 || echo kwriteconfig5
 }
 
+git_clone_retry() { # git_clone_retry <url> <dest> [required]
+    local url="$1" dest="$2" required="${3:-optional}" attempt
+    for attempt in 1 2 3; do
+        if git clone --depth 1 "$url" "$dest"; then
+            return 0
+        fi
+        log "clone attempt $attempt/3 failed for $url"
+        rm -rf "$dest"
+        sleep 5
+    done
+    rm -rf "$dest"
+    if [[ $required == required ]]; then
+        log "ERROR: could not clone $url — theming incomplete"
+    else
+        log "WARN: could not clone $url (optional component skipped)"
+    fi
+    return 1
+}
+
 apply_theme() {
     log "Fetching WhiteSur KDE theme..."
-    rm -rf "$THEME_SRC" "$THEME_SRC-kv"
-    git clone --depth 1 https://github.com/vinceliuice/WhiteSur-kde.git "$THEME_SRC"
+    rm -rf "$THEME_SRC" "$THEME_SRC-kv" "$THEME_SRC-gtk"
+    git_clone_retry https://github.com/vinceliuice/WhiteSur-kde.git "$THEME_SRC" required || return 1
     chmod +x "$THEME_SRC/install.sh" 2>/dev/null || true
 
     log "Installing theme system-wide (window deco + plasma theme + look-and-feel)..."
@@ -50,19 +69,16 @@ apply_theme() {
 
     log "Installing Kvantum macOS app style..."
     if ! command -v kvantummanager >/dev/null 2>&1; then
-        pacman -S --needed --noconfirm kvantum 2>/dev/null \
-          || apt-get install -y kvantum 2>/dev/null \
-          || dnf install -y kvantum 2>/dev/null \
-          || log "WARN: install kvantum manually"
+        pacman -S --needed --noconfirm kvantum 2>/dev/null || log "WARN: install kvantum manually"
     fi
-    git clone --depth 1 https://github.com/vinceliuice/WhiteSur-Qt-style-theme.git "$THEME_SRC-kv" 2>/dev/null || true
+    git_clone_retry https://github.com/vinceliuice/WhiteSur-Qt-style-theme.git "$THEME_SRC-kv" || true
     if [[ -d "$THEME_SRC-kv/Kvantum" ]]; then
         mkdir -p /usr/share/Kvantum
         cp -r "$THEME_SRC-kv/Kvantum/"* /usr/share/Kvantum/ 2>/dev/null || true
     fi
 
     log "Installing WhiteSur GTK theme (GTK apps: Firefox dialogs, GIMP, Electron)..."
-    git clone --depth 1 https://github.com/vinceliuice/WhiteSur-gtk-theme.git "$THEME_SRC-gtk" 2>/dev/null || true
+    git_clone_retry https://github.com/vinceliuice/WhiteSur-gtk-theme.git "$THEME_SRC-gtk" || true
     if [[ -d "$THEME_SRC-gtk" ]]; then
         chmod +x "$THEME_SRC-gtk/install.sh" 2>/dev/null || true
         "$THEME_SRC-gtk/install.sh" --libadwaita 2>/dev/null \
