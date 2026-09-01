@@ -108,7 +108,8 @@ jobs:
             e2fsprogs \
             git \
             pv \
-            rclone
+            rclone \
+            github-cli
 
       - name: Starting Build
         run: |
