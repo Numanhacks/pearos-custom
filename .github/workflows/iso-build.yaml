@@ -132,58 +132,34 @@ jobs:
           acl = private
           EOF
 
-      - name: Uploading to R2 (pearos-cdn/iso)
+      - name: Upload to GitHub Release (pearos-custom)
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           ISO_FILE=$(ls out/*.iso 2>/dev/null || ls *.iso 2>/dev/null | head -n 1)
-
           if [ -z "$ISO_FILE" ]; then
             echo "[ ERR ]: Could not find ISO file."
             exit 1
           fi
+          echo "Uploading $ISO_FILE (size: $(du -h "$ISO_FILE" | cut -f1)) to GitHub Releases..."
 
-          echo "Uploading $ISO_FILE (file-size: $(du -h "$ISO_FILE" | cut -f1)) to Cloudflare R2 (pearos-cdn/iso)..."
-
-          rclone copy "$ISO_FILE" "r2-pearos:pearos-cdn/iso/" --progress
+          # Create/update a release for this build and attach the ISO.
+          TAG="iso-$(date +%Y%m%d-%H%M)"
+          # If the tag already exists (re-run), update rather than fail.
+          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --title "pearOS custom ISO ${TAG}" \
+            --notes "Automated build of Numanhacks/pearos-custom with the full optimization stack." \
+            --generate-notes
+          gh release upload "$TAG" "$ISO_FILE" --repo "${GITHUB_REPOSITORY}" --clobber
 
           if [ -f sha.txt ]; then
             SHA_FILE="$(basename "$ISO_FILE").sha256"
             cp sha.txt "$SHA_FILE"
-
-            echo "Uploading $SHA_FILE to Cloudflare R2 (pearos-cdn/iso)..."
-
-            rclone copy "$SHA_FILE" "r2-pearos:pearos-cdn/iso/" --progress
+            gh release upload "$TAG" "$SHA_FILE" --repo "${GITHUB_REPOSITORY}" --clobber
           else
             echo "[ ERR ]: sha.txt not found, skipping checksum upload."
           fi
 
-          echo "[ SUCCESS ] Upload finished"
-
-      - name: Commit updated sha.txt
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          # $GITHUB_WORKSPACE/.git is gone by this point (something in the
-          # mkarchiso/pacstrap process wipes or obscures it) -- clone fresh
-          # into a separate dir instead of depending on the build workspace's
-          # own repo state.
-          new_sha=$(cat "$GITHUB_WORKSPACE/sha.txt")
-
-          clonedir=$(mktemp -d)
-          git clone --depth 1 --branch "${GITHUB_REF_NAME}" \
-            "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
-            "$clonedir"
-
-          cd "$clonedir"
-          echo "$new_sha" > sha.txt
-
-          git config user.name "pearOS build bot"
-          git config user.email "actions@users.noreply.github.com"
-
-          if git diff --quiet -- sha.txt; then
-            echo "sha.txt unchanged, nothing to commit."
-            exit 0
-          fi
-
-          git add sha.txt
-          git commit -m "Update sha.txt for $(basename "$(ls "$GITHUB_WORKSPACE"/*.iso 2>/dev/null | head -n1)")"
-          git push origin "${GITHUB_REF_NAME}"
+          echo "[ SUCCESS ] ISO attached to release $TAG"
+          echo "Download: https://github.com/${GITHUB_REPOSITORY}/releases/tag/$TAG"
