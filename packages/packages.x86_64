@@ -145,6 +145,7 @@ sg3_utils
 smartmontools
 smbclient
 sof-firmware
+zram-generator
 spectacle
 spice-vdagent
 squashfs-tools
