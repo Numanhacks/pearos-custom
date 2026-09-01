@@ -33,9 +33,6 @@ log "governors set to performance (min=max)"
 
 # ---- 2) Turbo/boost indefinitely ----------------------------------------------
 if [[ $VENDOR == amd ]]; then
-    [[ -w /sys/devices/system/cpu/amd_pstate/amd_pstate_highest_perf ]] || true
-    echo 0 > /sys/devices/system/cpu/cpufreq/boost 2>/dev/null || true   # 0=disabled? NO:
-    # boost: 1 = enabled on AMD; amd_pstate has its own knob
     echo 1 > /sys/devices/system/cpu/cpufreq/boost 2>/dev/null || true
     [[ -w /sys/devices/system/cpu/amd_pstate/status ]] && echo active > /sys/devices/system/cpu/amd_pstate/status 2>/dev/null || true
 elif [[ $VENDOR == intel ]]; then

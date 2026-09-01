@@ -12,6 +12,11 @@ NCPU=$(nproc)
 UI_CPUS="0-1"
 WORK_CPUS_START=2
 WORK_LIST=$(seq $WORK_CPUS_START $((NCPU-1)) | tr '\n' ',' | sed 's/,$//')
+# net IRQs get a small dedicated pair of worker cores, clipped to what exists
+NET_AFFINITY="2-3"
+if [ "$NCPU" -lt 4 ]; then
+    NET_AFFINITY="$WORK_LIST"
+fi
 
 classify_irq() { # classify_irq <irq> -> prints net|storage|gpu|other
     local irq="$1" dev=""
@@ -29,13 +34,13 @@ for irqq in /proc/irq/[0-9]*; do
         *nvme*|*ahci*|*sata*|*"ata_"*) target=$((WORK_CPUS_START)) ;;                    # storage: dedicated core
         *amdgpu*|*i915*|*nvidia*|*drm*|*gfx*|*display*)                                 # GPU/display: near GPU node
             target=$WORK_LIST ;;
-        *enp*|*wlp*|*eth*|*wifi*|*r8169*|*mt79*|*iwlmvm*|*ixgbe*|*igb*) target="2-3" ;; # net: fixed pair
+        *enp*|*wlp*|*eth*|*wifi*|*r8169*|*mt79*|*iwlmvm*|*ixgbe*|*igb*) target="$NET_AFFINITY" ;; # net: dedicated worker pair
     esac
     # never steal CPU0-1 from system/UI
     case "$target" in 0*|1*) continue ;; esac
     echo "$target" > "/proc/irq/$irq/smp_affinity_list" 2>/dev/null || true
 done
-log "IRQ affinity: UI=$UI_CPUS net=2-3 storage=$WORK_CPUS_START rest=$WORK_LIST"
+log "IRQ affinity: UI=$UI_CPUS net=$NET_AFFINITY storage=$WORK_CPUS_START rest=$WORK_LIST"
 
 # persist via systemd unit (see pearos-performance-meta.target Wants chain)
 cat > /etc/systemd/system/irq-affinity.service <<'EOF'

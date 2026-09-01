@@ -134,6 +134,7 @@ if command -v systemd-oomd >/dev/null 2>&1; then
     install -m644 "$SCRIPT_DIR/oomd-managed.slice.conf" /etc/systemd/system/system.slice.d/50-oomd.conf
     install -m644 "$SCRIPT_DIR/oomd-managed.slice.conf" /etc/systemd/system/user.slice.d/50-oomd.conf
     install -m644 "$SCRIPT_DIR/oomd-managed.slice.conf" /etc/systemd/system/user@.service.d/50-oomd.conf
+    bash "$SCRIPT_DIR/oomd-protect.sh" || warn "oomd protect drop-ins failed (continuing)."
     systemctl daemon-reload
     systemctl enable --now systemd-oomd.service || warn "systemd-oomd could not be enabled."
     register_rollback "rm -f /etc/systemd/oomd.conf.d/50-macos-memory.conf /etc/systemd/system/system.slice.d/50-oomd.conf /etc/systemd/system/user.slice.d/50-oomd.conf /etc/systemd/system/user@.service.d/50-oomd.conf; systemctl daemon-reload"

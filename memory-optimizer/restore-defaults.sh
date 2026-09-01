@@ -36,6 +36,7 @@ rm -f /etc/systemd/oomd.conf.d/50-macos-memory.conf
 rm -f /etc/systemd/system/system.slice.d/50-oomd.conf
 rm -f /etc/systemd/system/user.slice.d/50-oomd.conf
 rm -f /etc/systemd/system/user@.service.d/50-oomd.conf
+rm -f /etc/systemd/system/{sshd,dbus,dbus-broker,systemd-logind,sddm}.service.d/50-oomd-avoid.conf
 rm -f /etc/systemd/system/app-nap.service
 rm -f /etc/systemd/system/ksm.service /etc/systemd/system/ksm.timer
 rm -f /usr/local/lib/app-nap/app-nap-daemon.py
