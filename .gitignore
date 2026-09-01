@@ -10,3 +10,7 @@ work/
 
 # Cache
 __pycache__
+
+iso-dl/
+Ai-dev-log-*.md
+.zcode/
