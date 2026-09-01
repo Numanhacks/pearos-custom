@@ -27,7 +27,7 @@ bash "$SD/gpu-compute-optimize.sh"
 bash "$SD/irq-balance.sh"
 
 systemctl daemon-reload
-systemctl enable --now pearos-performance-meta.service
+systemctl enable pearos-performance-meta.service 2>/dev/null || true
 log "installed. meta service: systemctl status pearos-performance-meta"
 log "benchmark:  sudo geekbench-mode.sh <command>   |  --persistent"
 log "revert anytime: systemctl stop pearos-performance-meta (runs pear-perf-restore)"

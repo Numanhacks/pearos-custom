@@ -129,7 +129,7 @@ log "zram: zram-generator will activate /dev/zram0 at boot (priority 100)."
 # 5) systemd-oomd — pressure-based killing
 # ============================================================================
 log "Configuring systemd-oomd..."
-if command -v systemd-oomd >/dev/null 2>&1; then
+if [ -f /usr/lib/systemd/system/systemd-oomd.service ] || command -v systemd-oomd >/dev/null 2>&1; then
     mkdir -p /etc/systemd/oomd.conf.d
     install -m644 "$SCRIPT_DIR/oomd.conf" /etc/systemd/oomd.conf
     install -Dm644 "$SCRIPT_DIR/oomd-drop.conf" /etc/systemd/oomd.conf.d/50-macos-memory.conf
@@ -139,7 +139,7 @@ if command -v systemd-oomd >/dev/null 2>&1; then
     install -m644 "$SCRIPT_DIR/oomd-managed.slice.conf" /etc/systemd/system/user@.service.d/50-oomd.conf
     bash "$SCRIPT_DIR/oomd-protect.sh" || warn "oomd protect drop-ins failed (continuing)."
     systemctl daemon-reload
-    systemctl enable --now systemd-oomd.service || warn "systemd-oomd could not be enabled."
+    systemctl enable systemd-oomd.service 2>/dev/null || warn "systemd-oomd could not be enabled (activates at boot)."
     register_rollback "rm -f /etc/systemd/oomd.conf.d/50-macos-memory.conf /etc/systemd/system/system.slice.d/50-oomd.conf /etc/systemd/system/user.slice.d/50-oomd.conf /etc/systemd/system/user@.service.d/50-oomd.conf; systemctl daemon-reload"
 else
     warn "systemd-oomd not available — legacy OOM killer remains."
