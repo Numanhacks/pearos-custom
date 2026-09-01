@@ -1,0 +1,10 @@
+[Unit]
+Description=Periodic KSM re-assert (survives sleep/wake which resets ksm tunables)
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=15min
+Unit=ksm.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,22 @@
+[Unit]
+Description=pearOS Performance Meta Layer (CPU/GPU/IRQ/IO/Thermal + Memory suite)
+Documentation=file:///usr/local/share/pearos-performance/README.md
+After=multi-user.target zram-setup.service
+Wants=zram-setup.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+# Order: memory suite first (sysctl base), then CPU/IRQ/IO/GPU, thermal monitor last.
+ExecStart=/usr/local/sbin/cpu-performance.sh
+ExecStart=/usr/local/sbin/irq-balance.sh
+ExecStart=/usr/local/sbin/io-scheduler.sh
+ExecStart=/usr/local/sbin/gpu-compute-optimize.sh
+ExecStart=/usr/local/sbin/memory-bandwidth.sh
+ExecStart=/usr/local/sbin/network-benchmark-tune.sh
+ExecStart=/usr/local/sbin/thermal-manager.sh
+# on stop: conservative restore
+ExecStop=/usr/local/bin/pear-perf-restore
+
+[Install]
+WantedBy=multi-user.target

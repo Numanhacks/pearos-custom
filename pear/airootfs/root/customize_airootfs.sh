@@ -106,6 +106,13 @@ fi
 
 
 
+echo "Applying pearOS optimization stack (memory/performance/desktop-experience)"
+if /usr/local/bin/pearos-opt-bootstrap; then
+	echo "Optimization stack applied"
+else
+	echo "WARN: optimization stack had errors - build continues"
+fi
+
 echo "Cleaning up pearOS Build"
 
 rm -rf /usr/share/{doc,man,info,help}/*

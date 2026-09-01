@@ -1,0 +1,22 @@
+[Unit]
+Description=App Nap — cgroup-v2 freezer lifecycle for unfocused applications
+Documentation=file:///usr/local/lib/app-nap/app-nap-daemon.py
+After=graphical-session.target multi-user.target
+Wants=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /usr/local/lib/app-nap/app-nap-daemon.py
+Restart=on-failure
+RestartSec=5
+# Needs root to write cgroup.freeze and migrate PIDs at /sys/fs/cgroup
+User=root
+# Tier cgroups are created by the daemon at startup
+ExecStartPre=-/usr/bin/mkdir -p /sys/fs/cgroup/app-nap.slice/tier1 /sys/fs/cgroup/app-nap.slice/tier2 /sys/fs/cgroup/app-nap.slice/tier3
+Environment=APPNAP_FREEZE_AFTER=60
+Environment=APPNAP_COMPRESS_AFTER=300
+Environment=APPNAP_SWAP_AFTER=1800
+Environment=APPNAP_POLL_INTERVAL=60
+
+[Install]
+WantedBy=multi-user.target

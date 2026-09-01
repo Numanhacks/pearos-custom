@@ -1,0 +1,7 @@
+[Unit]
+Description=KSM aggressive scan (re-apply after wake/resume and periodically)
+After=multi-user.target suspend.target hibernate.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/ksm-activate.sh

@@ -1,0 +1,9 @@
+[Unit]
+Description=pearOS compositor tuning (KWin Wayland: VRR, HiDPI, 120fps, tiling)
+After=graphical.target
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/lib/pearos-dx/22-compositor.sh
+[Install]
+WantedBy=graphical.target

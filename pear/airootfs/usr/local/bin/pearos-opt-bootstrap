@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# pearos-opt-bootstrap — runs during ISO build (customize_airootfs.sh).
+# Applies the full pearOS optimization stack inside the image:
+#   memory suite (zram/zswap/oomd/KSM) + performance suite + desktop experience
+# Surface support is NOT applied at build (kernel repo needs network at install);
+# it ships as a script the user runs (or plasma-welcome offers it).
+set -Eeuo pipefail
+LIB=/usr/local/lib/pearos-opt
+log() { echo "[pearos-opt] $*"; }
+[[ -d $LIB ]] || { echo "pearos-opt files missing"; exit 0; }   # never break build
+
+# 1) Memory suite (zram, zswap params, oomd, KSM, app-nap service files)
+if [[ -f $LIB/optimize-memory.sh ]]; then
+    bash "$LIB/optimize-memory.sh" || log "WARN: memory suite partially failed (build continues)"
+fi
+
+# 2) Performance suite (CPU/IRQ/IO/GPU/thermal)
+if [[ -f $LIB/install-performance.sh ]]; then
+    bash "$LIB/install-performance.sh" || log "WARN: performance suite partially failed"
+fi
+
+# 3) Desktop experience (compositor polish, audio, bluetooth, spotlight...)
+if [[ -f $LIB/install-desktop-experience.sh ]]; then
+    bash "$LIB/install-desktop-experience.sh" || log "WARN: desktop experience partially failed"
+fi
+
+# 4) macOS UI polish (WhiteSur theming) — deferred to first boot via a service,
+# because it clones themes from the network; doing that at build-time makes
+# builds network-fragile. Ship as oneshot service, disabled by default, user
+# (or plasma-welcome) enables it.
+install -Dm755 "$LIB/pear-ui-polish.sh" /usr/local/bin/pear-ui-polish
+cat > /etc/systemd/system/pearos-ui-polish.service <<'EOF'
+[Unit]
+Description=pearOS UI polish (macOS theming, run once)
+Wants=network-online.target
+After=network-online.target graphical.target
+ConditionPathExists=!/var/lib/pear-ui-polish/.done
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/pear-ui-polish
+ExecStartPost=/usr/bin/touch /var/lib/pear-ui-polish/.done
+[Install]
+WantedBy=graphical.target
+EOF
+mkdir -p /etc/systemd/system/graphical.target.wants
+ln -sf ../pearos-ui-polish.service /etc/systemd/system/graphical.target.wants/ 2>/dev/null || \
+    systemctl enable pearos-ui-polish 2>/dev/null || true
+
+# 5) Surface support: ship the installer, don't run it (needs repo sync + reboot)
+install -Dm755 "$LIB/install-surface-support.sh" /usr/local/bin/install-surface-support
+install -Dm644 "$LIB/README-SURFACE.md" /usr/local/share/doc/pearos-surface.md 2>/dev/null || true
+
+log "optimization stack integrated into image"
