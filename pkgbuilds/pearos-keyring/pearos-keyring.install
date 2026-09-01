@@ -1,0 +1,7 @@
+post_upgrade() {
+    pacman-key --populate pearos
+}
+
+post_install() {
+    post_upgrade
+}

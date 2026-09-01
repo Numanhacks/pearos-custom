@@ -1,0 +1,59 @@
+# Maintainer : Alexandru Balan <alex@pear-software.com>
+
+pkgname=system-settings
+_realname=system-settings
+pkgdesc="pearOS System Settings application (Qt6/QML)"
+pkgver=26.7.0
+pkgrel=1
+arch=('x86_64')
+depends=('qt6-base' 'qt6-declarative' 'qt6-5compat'
+         'net-tools' 'fprintd' 'power-profiles-daemon' 'jq' 'piri-base')
+makedepends=('cmake' 'qt6-tools')
+url="https://pearos.xyz"
+license=('GPLv3')
+source=("file://${startdir}/license.txt"
+        "file://${startdir}/pearos-systemsettings.desktop"
+        "file://${startdir}/hide-systemsettings.menu")
+sha256sums=('SKIP'
+            'SKIP'
+            'SKIP')
+
+prepare() {
+  cp -r "${startdir}/assets"        "${srcdir}/assets"
+  cp -r "${startdir}/backend"       "${srcdir}/backend"
+  cp -r "${startdir}/qml"           "${srcdir}/qml"
+  cp -r "${startdir}/themeswitcher" "${srcdir}/themeswitcher"
+  cp -r "${startdir}/pearID"        "${srcdir}/pearID"
+  cp    "${startdir}/main.cpp"        "${srcdir}/main.cpp"
+  cp    "${startdir}/CMakeLists.txt"  "${srcdir}/CMakeLists.txt"
+}
+
+build() {
+  cmake -S "${srcdir}" -B "${srcdir}/build" \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr
+  cmake --build "${srcdir}/build" --parallel
+}
+
+package() {
+  # Binary goes directly into /usr/bin as systemsettings1
+  install -Dm755 "${srcdir}/build/systemsettings1" \
+    "${pkgdir}/usr/bin/systemsettings1"
+
+  # Assets and themeswitcher
+  install -d "${pkgdir}/usr/share/extras/${_realname}"
+  cp -r "${srcdir}/assets"        "${pkgdir}/usr/share/extras/${_realname}/assets"
+  cp -r "${srcdir}/themeswitcher" "${pkgdir}/usr/share/extras/${_realname}/themeswitcher"
+  cp -r "${srcdir}/pearID"        "${pkgdir}/usr/share/extras/${_realname}/pearID"
+  chmod +x "${pkgdir}/usr/share/extras/${_realname}/themeswitcher/kde-theme-switch.sh"
+  chmod +x "${pkgdir}/usr/share/extras/${_realname}/pearID/"*.sh
+
+  install -Dm644 "${srcdir}/pearos-systemsettings.desktop" \
+    "${pkgdir}/usr/share/applications/pearos-systemsettings.desktop"
+
+  install -Dm644 "${srcdir}/license.txt" \
+    "${pkgdir}/usr/share/licenses/pearos-system-settings/license.txt"
+
+  install -Dm644 "${srcdir}/hide-systemsettings.menu" \
+    "${pkgdir}/etc/xdg/menus/applications-merged/hide-systemsettings.menu"
+}

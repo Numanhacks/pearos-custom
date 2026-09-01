@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=System Settings
+GenericName=System Settings
+Comment=pearOS System Settings
+Exec=systemsettings1
+Icon=systemsettings
+StartupWMClass=systemsettings1
+StartupNotify=true
+Categories=Qt;KDE;Settings;
+Keywords=settings;preferences;configuration;system;
+OnlyShowIn=KDE;
