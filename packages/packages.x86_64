@@ -44,6 +44,7 @@ fatresize
 gcc
 gpart
 gparted
+git
 gptfdisk
 grub
 haveged

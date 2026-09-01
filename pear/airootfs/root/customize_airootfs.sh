@@ -190,8 +190,9 @@ if [ "$apple_ok" -eq 1 ] && [ -f /root/apple-white.png ]; then
     # Boot splash: replace pear/macOS-logo images shipped by plymouth themes.
     find /usr/share/plymouth/themes -type f \( -iname "*pear*.png" -o -iname "*logo*.png" \) 2>/dev/null | \
         while read -r f; do cp /root/apple-white.png "$f" && echo "branding: $f"; done
-    # Icon theme / pixmaps: every pear-named png/svg icon becomes the Apple logo.
-    find /usr/share/icons /usr/share/pixmaps -type f \( -iname "*pear*.png" -o -iname "*pear*.svg" -o -iname "*pear*.svgz" \) 2>/dev/null | \
+    # Icon theme / pixmaps: pearOS-branded icons become the Apple logo. Match
+    # 'pear' as a word — '*pear*' alone also matched 'appearance' icons.
+    find /usr/share/icons /usr/share/pixmaps -type f \( -iname "*pearos*" -o -iname "pear-*" -o -iname "pear_*" -o -iname "*pear.png" -o -iname "*pear.svg" -o -iname "*pear.svgz" \) 2>/dev/null | \
         while read -r f; do
             case "$f" in
                 *.png)  [ -f /root/apple-black.png ] && cp /root/apple-black.png "$f" ;;
@@ -205,6 +206,9 @@ else
 fi
 
 echo "Applying pearOS optimization stack (memory/performance/desktop-experience)"
+# The repo stores these scripts 0644 (Windows checkout); make them executable.
+chmod +x /usr/local/bin/pearos-opt-bootstrap /usr/local/bin/pear-ui-polish \
+         /usr/local/bin/install-surface-support /usr/local/lib/pearos-opt/*.sh 2>/dev/null || true
 if /usr/local/bin/pearos-opt-bootstrap; then
 	echo "Optimization stack applied"
 else
