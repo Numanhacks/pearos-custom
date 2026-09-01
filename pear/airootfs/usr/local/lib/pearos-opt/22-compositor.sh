@@ -15,8 +15,10 @@ for home in /root /home/*; do
     kcfg kwinrc Compositing AllowTearing false
     kcfg kwinrc Compositing VrrPolicy 1                     # 0 never, 1 always, 2 automatic -> use 1 on VRR panels
     # --- fractional HiDPI scaling (125/150/175/200) ---
-    kcfg kdeglobals KScreen ScaleFactor 1.25
-    kcfg kdeglobals KScreen ScreenScaleFactors ""           # per-monitor via kscreen; 1.25 default
+    # Scaling is left to plasma-welcome/display settings — forcing 1.25 on
+    # every machine (incl. 1080p laptop + 4K desktop) was wrong for many.
+    kcfg kdeglobals KScreen ScaleFactor 1
+    kcfg kdeglobals KScreen ScreenScaleFactors ""           # per-monitor via kscreen
     # --- 120fps-class animations, GPU shader transitions (KWin's GL shaders) ---
     kcfg kwinrc KDE AnimationDurationFactor 0.4
     kcfg kwinrc Plugins kwin4_effect_fadeEnabled true

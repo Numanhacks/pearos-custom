@@ -120,6 +120,42 @@ fi
 
 
 
+echo "Vendoring WhiteSur themes into the image (first boot then needs no network)"
+vendor_theme() {
+    local repo="$1" dir="/root/${2:-$1}"
+    for attempt in 1 2 3; do
+        if git clone --depth 1 "https://github.com/vinceliuice/${repo}.git" "$dir"; then
+            return 0
+        fi
+        echo "theme clone attempt $attempt/3 failed for $repo, retrying..."
+        rm -rf "$dir"
+        sleep 5
+    done
+    echo "WARN: could not vendor $repo — pear-ui-polish will fetch it at first boot"
+    return 1
+}
+vendor_theme WhiteSur-kde && \
+    (chmod +x /root/WhiteSur-kde/install.sh && /root/WhiteSur-kde/install.sh --global || /root/WhiteSur-kde/install.sh) && \
+    echo "WhiteSur KDE theme installed system-wide"
+if vendor_theme WhiteSur-Qt-style-theme; then
+    mkdir -p /usr/share/Kvantum
+    cp -r /root/WhiteSur-Qt-style-theme/Kvantum/"-"* /usr/share/Kvantum/ 2>/dev/null || \
+    cp -r /root/WhiteSur-Qt-style-theme/Kvantum/* /usr/share/Kvantum/ 2>/dev/null || true
+fi
+if vendor_theme WhiteSur-gtk-theme; then
+    chmod +x /root/WhiteSur-gtk-theme/install.sh 2>/dev/null || true
+    /root/WhiteSur-gtk-theme/install.sh --libadwaita 2>/dev/null || /root/WhiteSur-gtk-theme/install.sh || true
+fi
+
+# SDDM login theme (shipped inside the WhiteSur-kde repo)
+if [ -d /root/WhiteSur-kde/sddm/WhiteSur ]; then
+    mkdir -p /usr/share/sddm/themes
+    cp -r /root/WhiteSur-kde/sddm/WhiteSur /usr/share/sddm/themes/WhiteSur && \
+        printf '[Theme]\nCurrent=WhiteSur\n' > /etc/sddm.conf.d/theme.conf && \
+        echo "SDDM theme set to WhiteSur" || \
+        echo "WARN: SDDM theme install failed"
+fi
+
 echo "Applying pearOS optimization stack (memory/performance/desktop-experience)"
 if /usr/local/bin/pearos-opt-bootstrap; then
 	echo "Optimization stack applied"
@@ -135,7 +171,7 @@ if [ ! -L /sbin/init ]; then
     ln -sf /usr/lib/systemd/systemd /sbin/init
 fi
 echo "Cleanup"
-if rm -rf /root/liquid-gel; then
+if rm -rf /root/liquid-gel /root/WhiteSur-kde /root/WhiteSur-Qt-style-theme /root/WhiteSur-gtk-theme; then
         echo "Finish cleanup"
 else
         echo "Failed to Cleanup files"

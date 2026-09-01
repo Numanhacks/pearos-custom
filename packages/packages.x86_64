@@ -101,6 +101,8 @@ nfs-utils
 nilfs-utils
 noto-fonts
 noto-fonts-cjk
+noto-fonts-emoji
+apple_cursor
 nss-mdns
 ntfs-3g
 ntp

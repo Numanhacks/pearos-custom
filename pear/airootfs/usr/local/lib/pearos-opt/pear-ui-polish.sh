@@ -59,31 +59,41 @@ git_clone_retry() { # git_clone_retry <url> <dest> [required]
 }
 
 apply_theme() {
-    log "Fetching WhiteSur KDE theme..."
-    rm -rf "$THEME_SRC" "$THEME_SRC-kv" "$THEME_SRC-gtk"
-    git_clone_retry https://github.com/vinceliuice/WhiteSur-kde.git "$THEME_SRC" required || return 1
-    chmod +x "$THEME_SRC/install.sh" 2>/dev/null || true
+    # Themes are vendored into the image at build time; only clone when absent
+    # (e.g. running the polish script on an older install or a minimal system).
+    if ls /usr/share/plasma/desktoptheme 2>/dev/null | grep -qi whitesur; then
+        log "WhiteSur theme already present in image — skipping download."
+    else
+        log "Fetching WhiteSur KDE theme..."
+        rm -rf "$THEME_SRC" "$THEME_SRC-kv" "$THEME_SRC-gtk"
+        git_clone_retry https://github.com/vinceliuice/WhiteSur-kde.git "$THEME_SRC" required || return 1
+        chmod +x "$THEME_SRC/install.sh" 2>/dev/null || true
 
-    log "Installing theme system-wide (window deco + plasma theme + look-and-feel)..."
-    "$THEME_SRC/install.sh" --global 2>/dev/null || "$THEME_SRC/install.sh"
+        log "Installing theme system-wide (window deco + plasma theme + look-and-feel)..."
+        "$THEME_SRC/install.sh" --global 2>/dev/null || "$THEME_SRC/install.sh"
 
-    log "Installing Kvantum macOS app style..."
-    if ! command -v kvantummanager >/dev/null 2>&1; then
-        pacman -S --needed --noconfirm kvantum 2>/dev/null || log "WARN: install kvantum manually"
-    fi
-    git_clone_retry https://github.com/vinceliuice/WhiteSur-Qt-style-theme.git "$THEME_SRC-kv" || true
-    if [[ -d "$THEME_SRC-kv/Kvantum" ]]; then
-        mkdir -p /usr/share/Kvantum
-        cp -r "$THEME_SRC-kv/Kvantum/"* /usr/share/Kvantum/ 2>/dev/null || true
+        log "Installing Kvantum macOS app style..."
+        if ! command -v kvantummanager >/dev/null 2>&1; then
+            pacman -S --needed --noconfirm kvantum 2>/dev/null || log "WARN: install kvantum manually"
+        fi
+        git_clone_retry https://github.com/vinceliuice/WhiteSur-Qt-style-theme.git "$THEME_SRC-kv" || true
+        if [[ -d "$THEME_SRC-kv/Kvantum" ]]; then
+            mkdir -p /usr/share/Kvantum
+            cp -r "$THEME_SRC-kv/Kvantum/"* /usr/share/Kvantum/ 2>/dev/null || true
+        fi
     fi
 
     log "Installing WhiteSur GTK theme (GTK apps: Firefox dialogs, GIMP, Electron)..."
-    git_clone_retry https://github.com/vinceliuice/WhiteSur-gtk-theme.git "$THEME_SRC-gtk" || true
-    if [[ -d "$THEME_SRC-gtk" ]]; then
-        chmod +x "$THEME_SRC-gtk/install.sh" 2>/dev/null || true
-        "$THEME_SRC-gtk/install.sh" --libadwaita 2>/dev/null \
-          || "$THEME_SRC-gtk/install.sh" 2>/dev/null \
-          || log "WARN: GTK theme install failed — GTK apps keep old look"
+    if ls /usr/share/themes 2>/dev/null | grep -qi whitesur; then
+        log "WhiteSur GTK theme already present — skipping download."
+    else
+        git_clone_retry https://github.com/vinceliuice/WhiteSur-gtk-theme.git "$THEME_SRC-gtk" || true
+        if [[ -d "$THEME_SRC-gtk" ]]; then
+            chmod +x "$THEME_SRC-gtk/install.sh" 2>/dev/null || true
+            "$THEME_SRC-gtk/install.sh" --libadwaita 2>/dev/null \
+              || "$THEME_SRC-gtk/install.sh" 2>/dev/null \
+              || log "WARN: GTK theme install failed — GTK apps keep old look"
+        fi
     fi
 }
 
@@ -112,7 +122,7 @@ apply_user_config() {
         kcfg "$u" "$KW" kwinrc Plugins kwin4_effect_fadeEnabled true
         kcfg "$u" "$KW" kwinrc Plugins kwin4_effect_scaleEnabled true
         # macOS snappiness (0.5 ≈ 2x faster than stock)
-        kcfg "$u" "$KW" kwinrc KDE AnimationDurationFactor 0.5
+        kcfg "$u" "$KW" kwinrc KDE AnimationDurationFactor 0.4
 
         # ---- 2) Window rules: popups and notch above maximized windows ----
         kcfg "$u" "$KW" kwinrulesrc 1 Description "Plasma popups above maximized windows"
