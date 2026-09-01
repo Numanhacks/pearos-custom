@@ -21,9 +21,12 @@ err()  { echo "[ERROR] $1" >&2; }
 # ---- Preflight -------------------------------------------------------------
 [[ $EUID -eq 0 ]] || { err "Run as root (sudo)."; exit 1; }
 
+CGROUP_V2=1
 if ! grep -qs '^cgroup2 ' /proc/mounts; then
-    err "cgroup v2 (unified hierarchy) not detected. Aborting."
-    exit 1
+    # Non-fatal: the ISO build chroot has no cgroup v2 mounted. Config files
+    # still ship and everything activates on the real boot.
+    CGROUP_V2=0
+    warn "cgroup v2 (unified hierarchy) not detected — runtime-only steps will be skipped."
 fi
 KMAJOR=$(uname -r | cut -d. -f1); KMINOR=$(uname -r | cut -d. -f2)
 if (( KMAJOR < 5 || (KMAJOR == 5 && KMINOR < 15) )); then
@@ -146,11 +149,11 @@ fi
 # 6) KSM with aggressive scanning + persistence timer
 # ============================================================================
 log "Enabling KSM (aggressive)..."
-bash "$SCRIPT_DIR/ksm-activate.sh" || warn "KSM activation failed (continuing; KSM is optional)."
+(( CGROUP_V2 )) && bash "$SCRIPT_DIR/ksm-activate.sh" || warn "KSM activation skipped/failed (activates via ksm.timer at boot)."
 install -Dm644 "$SCRIPT_DIR/ksm.service" /etc/systemd/system/ksm.service
 install -Dm644 "$SCRIPT_DIR/ksm.timer"  /etc/systemd/system/ksm.timer
 systemctl daemon-reload
-systemctl enable --now ksm.timer || warn "ksm.timer enable failed."
+systemctl enable ksm.timer 2>/dev/null || warn "ksm.timer enable failed."
 register_rollback "systemctl disable --now ksm.timer 2>/dev/null; true"
 
 # ============================================================================
@@ -160,7 +163,11 @@ log "Installing App Nap daemon..."
 install -Dm755 "$SCRIPT_DIR/app-nap-daemon.py" /usr/local/lib/app-nap/app-nap-daemon.py
 install -Dm644 "$SCRIPT_DIR/app-nap.service"   /etc/systemd/system/app-nap.service
 systemctl daemon-reload
-systemctl enable --now app-nap.service || { err "app-nap.service failed to start."; exit 1; }
+if (( CGROUP_V2 )); then
+    systemctl enable --now app-nap.service || { err "app-nap.service failed to start."; exit 1; }
+else
+    systemctl enable app-nap.service || warn "app-nap enable failed (no systemd running — activates at boot)."
+fi
 register_rollback "systemctl disable --now app-nap.service 2>/dev/null; for t in tier1 tier2 tier3; do rmdir /sys/fs/cgroup/app-nap.slice/\$t 2>/dev/null; done; rmdir /sys/fs/cgroup/app-nap.slice 2>/dev/null; true"
 
 # ============================================================================
