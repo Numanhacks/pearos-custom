@@ -65,7 +65,7 @@ apply_theme() {
         log "WhiteSur theme already present in image — skipping download."
     else
         log "Fetching WhiteSur KDE theme..."
-        rm -rf "$THEME_SRC" "$THEME_SRC-kv" "$THEME_SRC-gtk"
+        rm -rf "$THEME_SRC" "$THEME_SRC-gtk"
         git_clone_retry https://github.com/vinceliuice/WhiteSur-kde.git "$THEME_SRC" required || return 1
         chmod +x "$THEME_SRC/install.sh" 2>/dev/null || true
 
@@ -76,10 +76,9 @@ apply_theme() {
         if ! command -v kvantummanager >/dev/null 2>&1; then
             pacman -S --needed --noconfirm kvantum 2>/dev/null || log "WARN: install kvantum manually"
         fi
-        git_clone_retry https://github.com/vinceliuice/WhiteSur-Qt-style-theme.git "$THEME_SRC-kv" || true
-        if [[ -d "$THEME_SRC-kv/Kvantum" ]]; then
+        if [[ -d "$THEME_SRC/Kvantum" ]]; then
             mkdir -p /usr/share/Kvantum
-            cp -r "$THEME_SRC-kv/Kvantum/"* /usr/share/Kvantum/ 2>/dev/null || true
+            cp -r "$THEME_SRC/Kvantum/"* /usr/share/Kvantum/ 2>/dev/null || true
         fi
     fi
 

@@ -137,11 +137,8 @@ vendor_theme() {
 vendor_theme WhiteSur-kde && \
     (chmod +x /root/WhiteSur-kde/install.sh && /root/WhiteSur-kde/install.sh --global || /root/WhiteSur-kde/install.sh) && \
     echo "WhiteSur KDE theme installed system-wide"
-if vendor_theme WhiteSur-Qt-style-theme; then
-    mkdir -p /usr/share/Kvantum
-    cp -r /root/WhiteSur-Qt-style-theme/Kvantum/"-"* /usr/share/Kvantum/ 2>/dev/null || \
-    cp -r /root/WhiteSur-Qt-style-theme/Kvantum/* /usr/share/Kvantum/ 2>/dev/null || true
-fi
+mkdir -p /usr/share/Kvantum
+cp -r /root/WhiteSur-kde/Kvantum/* /usr/share/Kvantum/ 2>/dev/null || true
 if vendor_theme WhiteSur-gtk-theme; then
     chmod +x /root/WhiteSur-gtk-theme/install.sh 2>/dev/null || true
     /root/WhiteSur-gtk-theme/install.sh --libadwaita 2>/dev/null || /root/WhiteSur-gtk-theme/install.sh || true
@@ -223,7 +220,7 @@ if [ ! -L /sbin/init ]; then
     ln -sf /usr/lib/systemd/systemd /sbin/init
 fi
 echo "Cleanup"
-if rm -rf /root/liquid-gel /root/WhiteSur-kde /root/WhiteSur-Qt-style-theme /root/WhiteSur-gtk-theme; then
+if rm -rf /root/liquid-gel /root/WhiteSur-kde /root/WhiteSur-gtk-theme; then
         echo "Finish cleanup"
 else
         echo "Failed to Cleanup files"
