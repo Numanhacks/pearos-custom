@@ -1,0 +1,21 @@
+# Maintainer: pearOS custom build
+pkgname=pear-browser
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="pearOS native browser — Qt6/Chromium engine, custom macOS UI"
+arch=('x86_64')
+url="https://github.com/pearOS-archlinux"
+license=('GPL3')
+depends=('qt6-webengine' 'qt6-base' 'qt6-svg')
+makedepends=('cmake' 'ninja')
+provides=("${pkgname}")
+conflicts=()
+
+build() {
+  cmake -B build -S "${srcdir}/pear-browser" -G Ninja \
+        -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr
+  cmake --build build
+}
+package() {
+  DESTDIR="${pkgdir}" cmake --install build
+}
