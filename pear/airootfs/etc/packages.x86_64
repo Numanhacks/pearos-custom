@@ -7,7 +7,7 @@ avahi
 b43-fwcutter
 base
 bash-completion
-bcachefs-tools
+#[pearOS-opt] bcachefs-tools
 bind
 bluedevil
 bolt
@@ -17,12 +17,12 @@ btrfs-progs
 cachyos-keyring
 chwd
 ckbcomp
-clonezilla
-cloud-init
+#[pearOS-opt] clonezilla
+#[pearOS-opt] cloud-init
 cryptsetup
 darkhttpd
-ddrescue
-dhcpcd
+#[pearOS-opt] ddrescue
+#[pearOS-opt] dhcpcd
 diffutils
 dmidecode
 dmraid
@@ -39,7 +39,7 @@ exfatprogs
 f2fs-tools
 fakeroot
 fatresize
-gcc
+#[pearOS-opt] gcc
 gpart
 gparted
 gptfdisk
@@ -52,10 +52,10 @@ hyperv
 inetutils
 intel-ucode
 inxi
-irssi
+#[pearOS-opt] irssi
 iw
-iwd
-jfsutils
+#[pearOS-opt] iwd
+#[pearOS-opt] jfsutils
 kate
 kde-gtk-config
 kinfocenter
@@ -72,13 +72,13 @@ linux-cachyos-lts-zfs
 linux-cachyos-lts-nvidia-open
 
 #linux617-headers
-linux-firmware-marvell
+#[pearOS-opt] linux-firmware-marvell
 linux-firmware
 lsb-release
 lsof
 lsscsi
 lvm2
-lynx
+#[pearOS-opt] lynx
 mc
 mdadm
 #memtest86+
@@ -97,7 +97,7 @@ ndisc6
 net-tools
 networkmanager
 nfs-utils
-nilfs-utils
+#[pearOS-opt] nilfs-utils
 noto-fonts
 noto-fonts-cjk
 nss-mdns
@@ -105,7 +105,7 @@ ntfs-3g
 ntp
 nvidia-utils
 nvme-cli
-open-iscsi
+#[pearOS-opt] open-iscsi
 open-vm-tools
 opendesktop-fonts
 openssh
@@ -114,7 +114,7 @@ orca
 os-prober
 partclone
 parted
-partimage
+#[pearOS-opt] partimage
 partitionmanager
 pcsclite
 pipewire
@@ -151,7 +151,7 @@ squashfs-tools
 sudo
 syslinux
 systemd-resolvconf
-tcpdump
+#[pearOS-opt] tcpdump
 testdisk
 tpm2-tss
 traceroute
@@ -165,23 +165,23 @@ usbmuxd
 usbutils
 vim
 virtualbox-guest-utils
-vpnc
+#[pearOS-opt] vpnc
 vulkan-virtio
 wget
 wireless-regdb
 wireless_tools
 wireplumber
 wpa_supplicant
-wvdial
+#[pearOS-opt] wvdial
 xdg-user-dirs-gtk
 xdg-utils
 xfsprogs
-xl2tpd
+#[pearOS-opt] xl2tpd
 zfs-utils
 
 # pearOS Apps
 mpv
-make
+#[pearOS-opt] make
 #plasma-x11-session
 qt5-wayland
 qt6-wayland
@@ -223,17 +223,17 @@ kdeconnect
 seafari
 calamares
 pear-calamares-config
-python-pip
+#[pearOS-opt] python-pip
 system-settings
 #touchegg
 #appmenu-gtk-module
 file-roller
 nautilus
-npm
+#[pearOS-opt] npm
 gwenview
 elisa
 electron
-tk
+#[pearOS-opt] tk
 #xf86-video-nouveau
 #xf86-video-ati
 #xf86-video-amdgpu
@@ -243,3 +243,6 @@ intel-media-driver
 vulkan-radeon
 vulkan-intel
 vulkan-icd-loader
+
+# [pearOS-opt] zram for smoother memory management
+zram-generator
