@@ -156,6 +156,21 @@ if [ -d /root/WhiteSur-kde/sddm/WhiteSur ]; then
         echo "WARN: SDDM theme install failed"
 fi
 
+# macOS-style cursors (apple_cursor v2.0.1 prebuilt release; not in Arch repos)
+CURSOR_URL="https://github.com/ful1e5/apple_cursor/releases/download/v2.0.1/macOS.tar.xz"
+if curl -fsSL --retry 3 -o /root/macOS-cursor.tar.xz "$CURSOR_URL"; then
+    mkdir -p /usr/share/icons
+    tar -xf /root/macOS-cursor.tar.xz -C /usr/share/icons/ && \
+        mkdir -p /usr/share/icons/default && \
+        printf '[Icon Theme]\nInherits=macOS\n' > /usr/share/icons/default/index.theme && \
+        mkdir -p /etc/skel/.config && \
+        printf '[Mouse]\ncursorTheme=macOS\n' > /etc/skel/.config/kcminputrc && \
+        echo "macOS cursor theme installed" || \
+        echo "WARN: macOS cursor extraction failed"
+else
+    echo "WARN: could not download macOS cursors"
+fi
+
 echo "Applying pearOS optimization stack (memory/performance/desktop-experience)"
 if /usr/local/bin/pearos-opt-bootstrap; then
 	echo "Optimization stack applied"
