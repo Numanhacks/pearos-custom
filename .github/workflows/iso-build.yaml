@@ -167,14 +167,22 @@ jobs:
             cp sha.txt "${ISO_FILE}.sha256"
             gh release upload "$TAG" "${ISO_FILE}.sha256" --repo "${GITHUB_REPOSITORY}" --clobber
           fi
-          cat > reassemble.bat <<'EOF'
-@echo off
-REM Reassemble pearOS ISO from chunks (Windows)
-setlocal
-for /f "tokens=2 delims==" %%a in ('set ISO_FILE. 2^>nul') do set "BASE=%%a"
-copy /b "%~n0.part.aa" + "%~n0.part.ab" + "%~n0.part.ac" "%~n0.iso"
-echo Done: %~n0.iso
-EOF
+          # A heredoc here would put content at column 1 and break the YAML
+          # block scalar, so build the .bat with echo/printf instead. Chunk
+          # letters come from the actual parts on disk, not a hardcoded list.
+          ISO_BASENAME=$(basename "$ISO_FILE")
+          {
+            echo '@echo off'
+            echo 'REM Reassemble pearOS ISO from its chunks (Windows, run in this folder)'
+            printf 'copy /b'
+            first=1
+            for chunk in "${ISO_FILE}".part.*; do
+              if [ "$first" -eq 1 ]; then first=0; else printf '+'; fi
+              printf ' "%s"' "$(basename "$chunk")"
+            done
+            printf ' "%s"\n' "$ISO_BASENAME"
+            echo 'echo Done. Verify with: certutil -hashfile "%ISO_BASENAME%" SHA256'
+          } > reassemble.bat
           gh release upload "$TAG" reassemble.bat --repo "${GITHUB_REPOSITORY}" --clobber
 
           echo "[ SUCCESS ] All chunks uploaded to $TAG"
