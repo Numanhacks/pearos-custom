@@ -142,25 +142,40 @@ jobs:
             echo "[ ERR ]: Could not find ISO file."
             exit 1
           fi
-          echo "Uploading $ISO_FILE (size: $(du -h "$ISO_FILE" | cut -f1)) to GitHub Releases..."
+          echo "Preparing $ISO_FILE (size: $(du -h "$ISO_FILE" | cut -f1)) for GitHub Releases..."
 
-          # Create/update a release for this build and attach the ISO.
+          # GitHub Releases has a 2GB per-file limit; split the ISO into <2GB chunks.
+          CHUNK_SIZE_KIB=$((1900 * 1024))  # 1900 MiB chunks
+          split -b "${CHUNK_SIZE_KIB}k" "$ISO_FILE" "${ISO_FILE}.part."
+          echo "Split into: $(ls "${ISO_FILE}".part.* | wc -l) chunks"
+
           TAG="iso-$(date +%Y%m%d-%H%M)"
-          # If the tag already exists (re-run), update rather than fail.
           gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" \
             --repo "${GITHUB_REPOSITORY}" \
             --title "pearOS custom ISO ${TAG}" \
-            --notes "Automated build of Numanhacks/pearos-custom with the full optimization stack." \
+            --notes "Custom pearOS build (memory/performance/desktop-experience stack). Chunks must be reassembled." \
             --generate-notes
-          gh release upload "$TAG" "$ISO_FILE" --repo "${GITHUB_REPOSITORY}" --clobber
 
+          echo "Uploading chunks..."
+          for chunk in "${ISO_FILE}".part.*; do
+            echo "  -> $chunk"
+            gh release upload "$TAG" "$chunk" --repo "${GITHUB_REPOSITORY}" --clobber
+          done
+
+          # checksum + reassembly helper
           if [ -f sha.txt ]; then
-            SHA_FILE="$(basename "$ISO_FILE").sha256"
-            cp sha.txt "$SHA_FILE"
-            gh release upload "$TAG" "$SHA_FILE" --repo "${GITHUB_REPOSITORY}" --clobber
-          else
-            echo "[ ERR ]: sha.txt not found, skipping checksum upload."
+            cp sha.txt "${ISO_FILE}.sha256"
+            gh release upload "$TAG" "${ISO_FILE}.sha256" --repo "${GITHUB_REPOSITORY}" --clobber
           fi
+          cat > reassemble.bat <<'EOF'
+@echo off
+REM Reassemble pearOS ISO from chunks (Windows)
+setlocal
+for /f "tokens=2 delims==" %%a in ('set ISO_FILE. 2^>nul') do set "BASE=%%a"
+copy /b "%~n0.part.aa" + "%~n0.part.ab" + "%~n0.part.ac" "%~n0.iso"
+echo Done: %~n0.iso
+EOF
+          gh release upload "$TAG" reassemble.bat --repo "${GITHUB_REPOSITORY}" --clobber
 
-          echo "[ SUCCESS ] ISO attached to release $TAG"
+          echo "[ SUCCESS ] All chunks uploaded to $TAG"
           echo "Download: https://github.com/${GITHUB_REPOSITORY}/releases/tag/$TAG"
