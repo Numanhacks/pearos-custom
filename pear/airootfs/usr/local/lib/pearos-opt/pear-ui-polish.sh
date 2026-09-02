@@ -123,6 +123,13 @@ apply_user_config() {
         # macOS snappiness (0.5 ≈ 2x faster than stock)
         kcfg "$u" "$KW" kwinrc KDE AnimationDurationFactor 0.4
 
+        # ---- glassmorphism (macOS vibrancy look) ----
+        kcfg "$u" "$KW" kwinrc Effect-blur BlurStrength 12
+        kcfg "$u" "$KW" kwinrc Effect-blur NoiseStrength 1
+        kcfg "$u" "$KW" kwinrc Effect-blur BlurMethod DualKawase
+        kcfg "$u" "$KW" kwinrc Effect-blur Offset 8
+        kcfg "$u" "$KW" kwinrc Effect-blur corruptionThreshold 90
+
         # ---- 2) Window rules: popups and notch above maximized windows ----
         kcfg "$u" "$KW" kwinrulesrc 1 Description "Plasma popups above maximized windows"
         kcfg "$u" "$KW" kwinrulesrc 1 wmclassmatch 3

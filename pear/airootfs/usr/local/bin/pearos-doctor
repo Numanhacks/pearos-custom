@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# ============================================================================
+# pearos-doctor — quick health report for lag/UI-bug triage.
+# Run on the installed system and send the output to the build maintainer:
+#   pearos-doctor > pearos-health.txt
+# ============================================================================
+set -u
+echo "=== pearOS health report $(date) ==="
+echo; echo "--- uptime / load ---"; uptime
+echo; echo "--- top 12 CPU processes ---"
+ps -eo pid,ppid,ni,pcpu,pmem,comm,args --sort=-pcpu | head -13
+echo; echo "--- top 10 memory ---"
+ps -eo pid,ni,rss,comm --sort=-rss | head -11
+echo; echo "--- boot time breakdown ---"
+systemd-analyze 2>/dev/null || true
+systemd-analyze blame 2>/dev/null | head -15 || true
+echo; echo "--- failing units ---"
+systemctl --failed --no-legend 2>/dev/null || true
+echo; echo "--- desktop processes nice/affinity ---"
+for p in plasmashell kwin_wayland kwin_x11 pearos-notch pearos-dock ananicy-cpp app-nap; do
+    pgrep -a "$p" 2>/dev/null | head -3
+done
+echo; echo "--- zram / swap ---"
+zramctl 2>/dev/null || true; swapon --show 2>/dev/null || true
+echo; echo "--- sysctl sanity (expected: 100 / 0 / 0) ---"
+sysctl -n vm.swappiness vm.watermark_boost_factor vm.page-cluster 2>/dev/null
+echo; echo "--- MGLRU ---"
+cat /sys/kernel/mm/lru_gen/enabled 2>/dev/null || echo "unavailable"
+echo; echo "--- GPU/driver ---"
+lspci -k 2>/dev/null | grep -A3 -iE "vga|3d" | head -12
+echo; echo "--- disk I/O scheduler ---"
+for d in /sys/block/sd*/queue/scheduler /sys/block/nvme*n*/queue/scheduler; do
+    [ -e "$d" ] && echo "$d: $(cat "$d")"
+done 2>/dev/null
+echo "=== end ==="
