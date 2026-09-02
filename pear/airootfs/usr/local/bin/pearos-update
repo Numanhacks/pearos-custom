@@ -40,7 +40,7 @@ sync_plasmoid_qml() {
     local inst_ui="$inst_base/contents/ui"
     mkdir -p "$inst_ui" 2>/dev/null || true
     local files="main.qml Task.qml TaskBadgeOverlay.qml TaskProgressOverlay.qml GroupDialog.qml ContextMenu.qml PulseAudio.qml code/LayoutMetrics.js code/TaskTools.js code/DockZoom.js"
-    for rel in $files metadata.json; do
+    for rel in $files; do
         local url="$REPO_RAW/$src_prefix/$rel"
         local dest="$inst_ui/$rel"
         if ! curl -fsSL -I "$url" >/dev/null 2>&1; then
