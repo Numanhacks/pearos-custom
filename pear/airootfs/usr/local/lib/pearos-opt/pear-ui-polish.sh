@@ -165,7 +165,9 @@ apply_user_config() {
 }
 
 apply() {
-    apply_theme
+    # --config-only: skip theme download/install (pearos-update uses this to
+    # refresh settings without touching the vendored theme).
+    [[ $MODE != --config-only ]] && apply_theme
     apply_user_config
     log "Done. Log out/in (or: kquitapp6 plasmashell && kstart plasmashell)."
 }
@@ -178,6 +180,7 @@ revert() {
 
 case "$MODE" in
     apply)     apply ;;
+    --config-only) apply ;;
     --revert)  revert ;;
     *) echo "usage: $0 [--revert]"; exit 1 ;;
 esac

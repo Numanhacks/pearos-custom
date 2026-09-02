@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+# ============================================================================
+# pearos-update — bring an installed (or live) pearOS up to the latest build
+# without reflashing the USB.
+#
+#   pearos-update            # optimizations + theming from GitHub + pkgs
+#   pearos-update --full     # also runs 'pacman -Syu' (kernel/plasma/apps)
+#
+# How it works: the build machine (GitHub Actions) publishes the current
+# optimization stack to this repo. Here we sync those scripts over the old
+# ones, re-apply system-level config (sysctls, services, module options),
+# and optionally upgrade packages. Theming/user config is re-applied per user
+# via pear-ui-polish.
+# ============================================================================
+set -uo pipefail
+
+REPO_RAW="https://raw.githubusercontent.com/Numanhacks/pearos-custom/main"
+OPT_LIB="/usr/local/lib/pearos-opt"
+FULL=0
+[ "${1:-}" = "--full" ] && FULL=1
+
+log()  { echo -e "\033[92m[pearos-update]\033[0m $*"; }
+warn() { echo -e "\033[93m[pearos-update]\033[0m $*"; }
+[ "$(id -u)" -eq 0 ] || { warn "Run as root: sudo pearos-update"; exit 1; }
+
+mkdir -p "$OPT_LIB"
+
+# ---- 1) Sync latest optimization scripts from the build repo ---------------
+log "Fetching latest optimization suite from Numanhacks/pearos-custom..."
+FILES="memory-optimizer/optimize-memory.sh memory-optimizer/restore-defaults.sh \
+memory-optimizer/oomd-protect.sh memory-optimizer/99-macos-memory.conf \
+memory-optimizer/oomd.conf memory-optimizer/oomd-drop.conf \
+memory-optimizer/oomd-managed.slice.conf memory-optimizer/app-nap-daemon.py \
+memory-optimizer/app-nap.service memory-optimizer/ksm-activate.sh \
+memory-optimizer/ksm.service memory-optimizer/ksm.timer \
+memory-optimizer/pearos-preload.sh memory-optimizer/pearos-preload.service \
+memory-optimizer/pearos-memory-polish.service memory-optimizer/50-pearos.rules \
+memory-optimizer/99-pearos-net.conf \
+performance-suite/install-performance.sh performance-suite/cpu-performance.sh \
+performance-suite/irq-balance.sh performance-suite/io-scheduler.sh \
+performance-suite/gpu-compute-optimize.sh performance-suite/thermal-manager.sh \
+performance-suite/compile-flags.sh performance-suite/99-pearos-net.conf \
+desktop-experience/install-desktop-experience.sh \
+macos-ui-polish/pear-ui-polish.sh macos-ui-polish/pearos-global-smoothness.sh \
+surface-support/install-surface-support.sh"
+FAIL=0
+for f in $FILES; do
+    dest="$OPT_LIB/$(basename "$f")"
+    curl -fsSL --retry 3 -o "$dest" "$REPO_RAW/$f" \
+        && chmod +x "$dest" 2>/dev/null \
+        || { warn "could not fetch $f"; FAIL=1; }
+done
+if (( FAIL )); then
+    warn "some files failed to download — continuing with what we got"
+fi
+
+# ---- 2) Re-apply system-level config (idempotent) --------------------------
+log "Re-applying system tuning (sysctl, services, module options)..."
+bash "$OPT_LIB/optimize-memory.sh" 2>&1 | grep -E "INFO|WARN|ERROR" || true
+bash "$OPT_LIB/install-performance.sh" 2>&1 | grep -E "^\[" || true
+sysctl --system >/dev/null 2>&1 || true
+
+# module options can change too
+find /etc/modprobe.d -name "*.conf" -newer /var/lib/pearos-update.stamp 2>/dev/null | \
+    xargs -r mkinitcpio -P 2>/dev/null || true
+
+# ---- 3) Per-user theming refresh -------------------------------------------
+if [ -f /usr/local/bin/pear-ui-polish ]; then
+    log "Refreshing macOS theming for all users..."
+    bash /usr/local/bin/pear-ui-polish --config-only 2>/dev/null \
+        || bash /usr/local/bin/pear-ui-polish 2>/dev/null || true
+fi
+
+# ---- 4) Package upgrades -----------------------------------------------------
+if (( FULL )); then
+    log "Upgrading all packages (pacman -Syu) — this may take a while..."
+    pacman -Syu --noconfirm || warn "pacman -Syu failed (check network/repos)"
+else
+    log "Skipping package upgrade (use 'pearos-update --full' for kernel/Plasma/app updates)"
+fi
+
+touch /var/lib/pearos-update.stamp
+log "Done. Log out and back in for all theming changes to take effect."
