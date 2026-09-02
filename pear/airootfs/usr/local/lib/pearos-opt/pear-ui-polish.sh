@@ -138,7 +138,18 @@ apply_user_config() {
 
         # ---- 3) macOS look: THIS is what fixes the Wi-Fi/tray popups ----
         kcfg "$u" "$KW" kdeglobals KDE widgetStyle kvantum-dark
+        # macOS look: WhiteSur icons + Inter (SF Pro lookalike) system font.
+        if ls /usr/share/icons 2>/dev/null | grep -qi "^WhiteSur"; then
+            kcfg "$u" "$KW" kdeglobals Icons Theme WhiteSur
+        fi
         kcfg "$u" "$KW" kdeglobals Icons Theme pearos-icons
+        if command -v fc-list >/dev/null 2>&1 && fc-list | grep -qi inter; then
+            kcfg "$u" "$KW" kdeglobals General font "Inter,10,-1,5,50,0,0,0,0,0"
+            kcfg "$u" "$KW" kdeglobals General fixed "Inter,10,-1,5,50,0,0,0,0,0"
+            kcfg "$u" "$KW" kdeglobals General menuFont "Inter,10,-1,5,50,0,0,0,0,0"
+            kcfg "$u" "$KW" kdeglobals General smallestFont "Inter,8,-1,5,50,0,0,0,0,0"
+            kcfg "$u" "$KW" kdeglobals General toolBarFont "Inter,10,-1,5,50,0,0,0,0,0"
+        fi
         kcfg "$u" "$KW" kdeglobals KDE LookAndFeelPackage com.github.vinceliuice.WhiteSur-dark
         kcfg "$u" "$KW" plasmarc Theme name com.github.vinceliuice.WhiteSur-dark
 

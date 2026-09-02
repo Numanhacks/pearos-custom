@@ -153,6 +153,13 @@ if [ -d /root/WhiteSur-kde/sddm/WhiteSur ]; then
         echo "WARN: SDDM theme install failed"
 fi
 
+# WhiteSur icon theme + wallpapers (macOS icon look / macOS wallpapers)
+vendor_theme WhiteSur-icon-theme &&     (chmod +x /root/WhiteSur-icon-theme/install.sh && /root/WhiteSur-icon-theme/install.sh -b /root/WhiteSur-kde/wallpaper ||      /root/WhiteSur-icon-theme/install.sh) && echo "WhiteSur icon theme installed" ||     echo "WARN: icon theme install failed"
+if vendor_theme WhiteSur-wallpapers; then
+    mkdir -p /usr/share/backgrounds/WhiteSur
+    cp -r /root/WhiteSur-wallpapers/4k/* /usr/share/backgrounds/WhiteSur/ 2>/dev/null         || cp -r /root/WhiteSur-wallpapers/1080p/* /usr/share/backgrounds/WhiteSur/ 2>/dev/null || true
+fi
+
 # macOS-style cursors (apple_cursor v2.0.1 prebuilt release; not in Arch repos)
 CURSOR_URL="https://github.com/ful1e5/apple_cursor/releases/download/v2.0.1/macOS.tar.xz"
 if curl -fsSL --retry 3 -o /root/macOS-cursor.tar.xz "$CURSOR_URL"; then
@@ -220,7 +227,7 @@ if [ ! -L /sbin/init ]; then
     ln -sf /usr/lib/systemd/systemd /sbin/init
 fi
 echo "Cleanup"
-if rm -rf /root/liquid-gel /root/WhiteSur-kde /root/WhiteSur-gtk-theme; then
+if rm -rf /root/liquid-gel /root/WhiteSur-kde /root/WhiteSur-gtk-theme /root/WhiteSur-icon-theme /root/WhiteSur-wallpapers; then
         echo "Finish cleanup"
 else
         echo "Failed to Cleanup files"
