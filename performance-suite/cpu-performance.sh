@@ -12,6 +12,17 @@ grep -qi 'intel' /proc/cpuinfo && VENDOR=${VENDOR:-intel}
 
 log "arch=$ARCH vendor=$VENDOR"
 
+# ---- 0) Power-profiles-daemon handoff -----------------------------------------
+# power-profiles-daemon owns governor/EPP/boost and Plasma's power applet
+# switches profiles on it. If it manages the system we must NOT pin the
+# governor here, or the profiles silently do nothing (user-visible bug).
+if [ -f /usr/lib/systemd/system/power-profiles-daemon.service ]; then
+    systemctl unmask power-profiles-daemon.service 2>/dev/null || true
+    systemctl enable power-profiles-daemon.service 2>/dev/null || true
+    log "power-profiles-daemon owns CPU scaling — profiles (Battery/Balanced/Performance) are fully functional."
+    exit 0
+fi
+
 # ---- 1) Governor: performance on every cpufreq policy ------------------------
 for policy in /sys/devices/system/cpu/cpufreq/policy*; do
     [[ -d $policy ]] || continue

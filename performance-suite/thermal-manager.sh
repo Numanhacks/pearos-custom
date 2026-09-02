@@ -7,6 +7,15 @@ log() { logger -t thermal-mgr "$*"; echo "[thermal] $*"; }
 HOT_LIMIT=95000     # millidegrees
 HOT_SECS=10
 
+# If power-profiles-daemon owns scaling, don't fight it (it raises/lowers the
+# governor as part of its profiles; our monitor would fight its decisions).
+if [ -f /usr/lib/systemd/system/power-profiles-daemon.service ]; then
+    log "power-profiles-daemon present — thermal manager defers CPU control; monitor only."
+    MONITOR_ONLY=1
+else
+    MONITOR_ONLY=0
+fi
+
 # ---- runtime knobs ----
 # thermal polling 1s (default 4s)
 [[ -w /sys/class/thermal/thermal_zone0/mode ]] && echo enabled > /sys/class/thermal/thermal_zone0/mode 2>/dev/null || true
@@ -62,7 +71,7 @@ while true; do
                 t=$(cat "$z/temp" 2>/dev/null) || continue
                 (( t > HOTTEST )) && HOTTEST=$t
             done
-            if (( HOTTEST > 0 && HOTTEST < HOT_LIMIT - 2000 )); then
+            if (( HOTTEST > 0 && HOTTEST < HOT_LIMIT - 2000 )) && (( ! MONITOR_ONLY )); then
                 log "cooled to $((HOTTEST/1000))C — restoring performance governor"
                 for p in /sys/devices/system/cpu/cpufreq/policy*; do
                     grep -qw performance "$p/scaling_available_governors" 2>/dev/null && \
