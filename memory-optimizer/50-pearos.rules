@@ -1,0 +1,23 @@
+# /etc/ananicy.d/50-pearos.rules — interactive desktop always wins.
+# ananicy-cpp applies these automatically; type 'good' raises priority,
+# 'heavy' gets nice+ionice limits so background work can't stutter the UI.
+{ "name": "kwin_wayland", "type": "good" }
+{ "name": "kwin_x11", "type": "good" }
+{ "name": "plasmashell", "type": "good" }
+{ "name": "krunner", "type": "good" }
+{ "name": "Xwayland", "type": "good" }
+{ "name": "pipewire", "type": "good" }
+{ "name": "wireplumber", "type": "good" }
+{ "name": "systemd-oomd", "type": "good" }
+{ "name": "dolphin", "type": "good" }
+{ "name": "konsole", "type": "good" }
+{ "name": "firefox", "type": "good" }
+{ "name": "seafari", "type": "good" }
+{ "name": "electron", "type": "heavy" }
+{ "name": "electron43", "type": "heavy" }
+{ "name": "btrfs", "type": "heavy" }
+{ "name": "updatedb", "type": "heavy" }
+{ "name": "pacman", "type": "heavy" }
+{ "name": "gcc", "type": "heavy" }
+{ "name": "cc1plus", "type": "heavy" }
+{ "name": "make", "type": "heavy" }

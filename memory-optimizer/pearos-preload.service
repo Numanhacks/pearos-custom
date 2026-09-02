@@ -1,0 +1,9 @@
+[Unit]
+Description=pearOS preload (warm page cache with hot desktop binaries)
+After=graphical.target
+[Service]
+Type=oneshot
+ExecStart=/bin/bash -c 'nice -n 19 /usr/local/lib/pearos-opt/pearos-preload.sh'
+RemainAfterExit=yes
+[Install]
+WantedBy=graphical.target

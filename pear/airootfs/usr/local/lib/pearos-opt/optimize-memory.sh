@@ -171,6 +171,20 @@ fi
 register_rollback "systemctl disable --now app-nap.service 2>/dev/null; for t in tier1 tier2 tier3; do rmdir /sys/fs/cgroup/app-nap.slice/\$t 2>/dev/null; done; rmdir /sys/fs/cgroup/app-nap.slice 2>/dev/null; true"
 
 # ============================================================================
+# 8) MGLRU + preload (app-launch speed, no-stutter reclaim)
+# ============================================================================
+log "Installing MGLRU/polish + preload units..."
+install -Dm644 "$SCRIPT_DIR/pearos-memory-polish.service" /etc/systemd/system/pearos-memory-polish.service
+install -Dm755 "$SCRIPT_DIR/pearos-preload.sh" /usr/local/lib/pearos-opt/pearos-preload.sh
+install -Dm644 "$SCRIPT_DIR/pearos-preload.service" /etc/systemd/system/pearos-preload.service
+systemctl daemon-reload 2>/dev/null || true
+systemctl enable pearos-memory-polish.service 2>/dev/null || warn "memory-polish enable failed."
+systemctl enable pearos-preload.service 2>/dev/null || warn "preload enable failed."
+if [ -d /etc/ananicy.d ]; then
+    install -Dm644 "$SCRIPT_DIR/50-pearos.rules" /etc/ananicy.d/50-pearos.rules || warn "ananicy rules install failed."
+fi
+
+# ============================================================================
 # Done
 # ============================================================================
 trap - ERR

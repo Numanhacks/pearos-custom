@@ -1,0 +1,11 @@
+[Unit]
+Description=pearOS memory polish (enable MGLRU, zram-first swappiness)
+DefaultDependencies=no
+After=systemd-sysctl.service
+Before=sysinit.target
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c '[ -w /sys/kernel/mm/lru_gen/enabled ] && echo y > /sys/kernel/mm/lru_gen/enabled || true; [ -w /sys/kernel/mm/lru_gen/min_ttl_ms ] && echo 1000 > /sys/kernel/mm/lru_gen/min_ttl_ms || true'
+RemainAfterExit=yes
+[Install]
+WantedBy=sysinit.target
