@@ -41,6 +41,15 @@ elif [[ $VENDOR == intel ]]; then
 fi
 log "boost enabled"
 
+# ---- 3) Energy Performance Preference: 'performance' on every CPU ----------
+# amd-pstate and intel_pstate both expose EPP; 'performance' removes the
+# frequency ramp delay that causes micro-stutter on interaction.
+for epp in /sys/devices/system/cpu/cpu*/cpufreq/energy_performance_preference; do
+    [[ -w $epp ]] && echo performance > "$epp" 2>/dev/null || true
+done
+grep -q EPP /sys/devices/system/cpu/amd_pstate/status 2>/dev/null && log "EPP=performance (amd-pstate)" || true
+log "boost enabled; EPP set"
+
 # ---- 3) Disable deep C-states at runtime (C1 kept). Boot params finish this. --
 if [[ -d /dev/cpu/0/msr ]] || modprobe msr 2>/dev/null; then
     if command -v wrmsr >/dev/null 2>&1; then
