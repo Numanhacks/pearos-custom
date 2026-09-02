@@ -1,0 +1,88 @@
+# Maintainer: Alexandru Balan <alxb421@gmail.com>
+pkgname=pafari
+pkgver=26.8
+pkgrel=1
+pkgdesc="Pafari - a simple, clean, beautiful web browser (pearOS's fork of GNOME Web/Epiphany)"
+arch=('amd64' 'arm64')
+url="https://github.com/pearOS-archlinux/pafari"
+license="GPL-3+"
+section="web"
+priority="optional"
+maintainer="Alexandru Balan <alxb421@gmail.com>"
+
+builddepends=(
+    build-essential
+    pkg-config
+    meson
+    ninja-build
+    gettext
+    itstool
+    blueprint-compiler
+    appstream
+    desktop-file-utils
+    libcairo2-dev
+    libgck-2-dev
+    libgcr-4-dev
+    libgdk-pixbuf-2.0-dev
+    libglib2.0-dev
+    gsettings-desktop-schemas-dev
+    libgstreamer1.0-dev
+    libgtk-4-dev
+    iso-codes
+    libjson-glib-dev
+    libarchive-dev
+    libadwaita-1-dev
+    libsecret-1-dev
+    libsoup-3.0-dev
+    libxml2-dev
+    nettle-dev
+    libportal-gtk4-dev
+    libsqlite3-dev
+    libwebkitgtk-6.0-dev
+)
+
+# iso-codes and gsettings-desktop-schemas are read for their data files
+# (country/language names, base schemas) at runtime, not linked against -
+# dpkg-shlibdeps can't see that, so they're declared here manually.
+depends=(
+    iso-codes
+    gsettings-desktop-schemas
+)
+
+build() {
+    meson setup "$startdir" "$srcdir/build" \
+        --prefix=/usr \
+        --libdir=lib \
+        --buildtype=plain \
+        -Ddeveloper_mode=false \
+        -Dtech_preview=false \
+        -Dprofile='' \
+        -Dhelp=false
+    ninja -C "$srcdir/build"
+}
+
+package() {
+    DESTDIR="$pkgdir" ninja -C "$srcdir/build" install
+    # Web process extensions live in /usr/lib/epiphany, outside the
+    # default ld.so search path.
+    install -Dm644 /dev/null "$pkgdir/etc/ld.so.conf.d/pafari.conf"
+    echo "/usr/lib/epiphany" > "$pkgdir/etc/ld.so.conf.d/pafari.conf"
+}
+
+postinst="#!/bin/sh
+set -e
+ldconfig
+glib-compile-schemas /usr/share/glib-2.0/schemas >/dev/null 2>&1 || true
+update-desktop-database -q /usr/share/applications >/dev/null 2>&1 || true
+gtk-update-icon-cache -f /usr/share/icons/hicolor >/dev/null 2>&1 || true
+exit 0
+"
+
+postrm="#!/bin/sh
+set -e
+ldconfig
+glib-compile-schemas /usr/share/glib-2.0/schemas >/dev/null 2>&1 || true
+update-desktop-database -q /usr/share/applications >/dev/null 2>&1 || true
+gtk-update-icon-cache -f /usr/share/icons/hicolor >/dev/null 2>&1 || true
+exit 0
+"

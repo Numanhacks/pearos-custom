@@ -1,0 +1,219 @@
+# Gambas Form File 3.0
+
+{ Form Form
+  MoveScaled(0,0,85,90)
+  Text = ("System preferences")
+  Icon = Picture["themeChangerIcon.png"]
+  Centered = True
+  { lbl_accent Label
+    MoveScaled(2,11,24,4)
+    Enabled = False
+    Alignment = Align.Right
+    Text = ("Accent color:")
+  }
+  { lbl_appearance Label
+    MoveScaled(3,4,24,4)
+    Alignment = Align.Right
+    Text = ("Appearance: ")
+  }
+  { lbl_highlight Label
+    MoveScaled(2,16,24,4)
+    Enabled = False
+    Alignment = Align.Right
+    Text = ("Highlight color:")
+  }
+  { lbl_sidebar Label
+    MoveScaled(2,21,24,4)
+    Enabled = False
+    Alignment = Align.Right
+    Text = ("Sidebar icon size:")
+  }
+  { lbl_show_scroll Label
+    MoveScaled(2,31,24,4)
+    Enabled = False
+    Alignment = Align.Right
+    Text = ("Show scroll bars:")
+  }
+  { lbl_click_in_the_scroll Label
+    MoveScaled(2,42,24,4)
+    Enabled = False
+    Alignment = Align.Right
+    Text = ("Click in the scroll bar to:")
+  }
+  { lbl_web Label
+    MoveScaled(2,52,24,4)
+    Enabled = False
+    Alignment = Align.Right
+    Text = ("Default web browser:")
+  }
+  { Label11 Label
+    MoveScaled(29,73,39,4)
+    Enabled = False
+    Font = Font["-3"]
+    Alignment = Align.Left
+    Text = ("When selected, open documents and windows will not be\nrestored when you re-open an app.")
+  }
+  { lbl_prefer_tabs Label
+    MoveScaled(2,60,24,4)
+    Enabled = False
+    Alignment = Align.Right
+    Text = ("Prefer tabs:")
+  }
+  { Label13 Label
+    MoveScaled(2,78,24,4)
+    Enabled = False
+    Alignment = Align.Right
+    Text = ("Recent items:")
+  }
+  { Label14 Label
+    MoveScaled(37,79,28,3)
+    Enabled = False
+    Alignment = Align.Left
+    Text = ("Documents, Apps, and Servers")
+  }
+  { Label15 Label
+    MoveScaled(40,60,24,4)
+    Enabled = False
+    Alignment = Align.Left
+    Text = ("when opening documents")
+  }
+  { chk_allow_wallpaper_tint CheckBox
+    MoveScaled(27,25,36,4)
+    Enabled = False
+    Text = ("Allow wallpaper tinting in windblows")
+  }
+  { spacer1 Label
+    MoveScaled(1,28,83,3)
+    Enabled = False
+    Foreground = &H7F7F7F&
+    Alignment = Align.Justify
+    Text = ("_________________________________________________________________________________________________")
+  }
+  { rad_auto RadioButton
+    MoveScaled(27,31,43,4)
+    Enabled = False
+    Text = ("Automatically based on mouse or trackpad")
+    Value = True
+  }
+  { rad_when_scrolling RadioButton
+    MoveScaled(27,34,41,4)
+    Enabled = False
+    Text = ("When scrolling:")
+  }
+  { rad_always RadioButton
+    MoveScaled(27,37,41,4)
+    Enabled = False
+    Text = ("Always")
+  }
+  { rad_jump RadioButton
+    MoveScaled(27,42,41,4)
+    Enabled = False
+    Text = ("Jump to the next page")
+  }
+  { rad_spot_clicked RadioButton
+    MoveScaled(27,45,41,4)
+    Enabled = False
+    Text = ("Jump to the spot that's clicked")
+  }
+  { cb_default_browser ComboBox
+    MoveScaled(27,52,24,4)
+    Enabled = False
+    Text = ("Mozilla Firefox")
+  }
+  { cbo_highlight ComboBox
+    MoveScaled(27,16,24,4)
+    Enabled = False
+    Text = ("Accent color")
+  }
+  { cbo_sidebar_size ComboBox
+    MoveScaled(27,21,24,4)
+    Enabled = False
+    Text = ("Normal")
+  }
+  { ComboBox4 ComboBox
+    MoveScaled(27,60,12,4)
+    Enabled = False
+    List = [("always")]
+    Text = ("always")
+  }
+  { CheckBox1 CheckBox
+    MoveScaled(26,65,44,4)
+    Enabled = False
+    Text = ("Ask to keep changes when closing documents")
+  }
+  { CheckBox2 CheckBox
+    MoveScaled(26,69,43,3)
+    Enabled = False
+    Text = ("Close windows when quitting an app")
+  }
+  { SpinBar1 SpinBar
+    MoveScaled(27,78,10,4)
+    Enabled = False
+    Value = 10
+    MaxValue = 10000
+  }
+  { chk_allow_handoff CheckBox
+    MoveScaled(26,84,54,4)
+    Enabled = False
+    Font = Font["-1"]
+    Text = ("Allow Handoff between this Pear and your PearCloud devices")
+  }
+  { btn_light PictureBox
+    MoveScaled(28,2,12,8)
+    Mouse = Mouse.Pointing
+    ToolTip = ("Switches the theme to default light theme")
+    Picture = Picture.Load("light-normal.png")
+    Mode = PictureBox.Contain
+  }
+  { btn_dark PictureBox
+    MoveScaled(41,2,12,8)
+    Mouse = Mouse.Pointing
+    ToolTip = ("Switches the theme to default dark theme")
+    Picture = Picture.Load("dark-normal.png")
+    Mode = PictureBox.Contain
+  }
+  { spacer2 Label
+    MoveScaled(1,48,83,3)
+    Enabled = False
+    Foreground = &H7F7F7F&
+    Alignment = Align.Justify
+    Text = ("_________________________________________________________________________________________________")
+  }
+  { spacer3 Label
+    MoveScaled(1,56,83,3)
+    Enabled = False
+    Foreground = &H7F7F7F&
+    Alignment = Align.Justify
+    Text = ("_________________________________________________________________________________________________")
+  }
+  { lbl_light Label
+    MoveScaled(31,9,6,4)
+    Alignment = Align.Center
+    Text = ("Light")
+  }
+  { lbl_dark Label
+    MoveScaled(44,9,6,4)
+    Alignment = Align.Center
+    Text = ("Dark")
+  }
+  { btn_about Button
+    MoveScaled(2,84,3,3)
+    Text = ("?")
+  }
+  { btn_auto PictureBox
+    MoveScaled(53,2,12,8)
+    Visible = False
+    Enabled = False
+    ToolTip = ("This feature is not implemented yet")
+    Picture = Picture.Load("auto-normal.png")
+    Alignment = Align.Center
+    Mode = PictureBox.Contain
+  }
+  { lbl_auto Label
+    MoveScaled(57,9,6,4)
+    Visible = False
+    Enabled = False
+    Alignment = Align.Center
+    Text = ("Auto")
+  }
+}

@@ -1,0 +1,60 @@
+#!/bin/bash
+
+# Copyright (c) Alexandru Balan under the PearProject.
+# This file is part of the pearOS installer and it is
+# released under the GNU General Public License v3.0 Read more
+# about this license on github.com/Pear-Project.
+#
+# To be honest, I could do this in C but for the
+# sake of ease, I wanted something with no deps
+# and no compile (for those who will say
+# "bUt YoU CoULd uSe PyThOn" -> I said no deps.
+# Thank you for using pearOS. Or at least
+# trying to.
+
+i=1
+count=0
+
+is_usb() {
+  local bus
+  bus=$(udevadm info --query=property --path="/sys/block/${1#/dev/}" 2>/dev/null \
+        | grep -Po 'ID_BUS=\K\w+')
+  [ "$bus" = "usb" ]
+}
+
+# Build disk[] and size[] together from the same filtered list so indices always match.
+# -e 7,11 already excludes loop and optical devices; we skip USB here.
+while IFS= read -r device; do
+  if ! is_usb "$device"; then
+    disk[$i]="$device"
+    size[$i]=$(lsblk -d -n -r -o SIZE "$device" 2>/dev/null | tr -d '\n')
+    ((i++))
+    ((count++))
+  fi
+done < <(lsblk -d -n -p -r -e 7,11 -o NAME)
+
+case $1 in
+	"count") echo $count | tr -d '\n'
+	;;
+	"size") if [[ $2 > $count ]] ; then echo "999" ; else printf '%s\n' "${size[$2]}" | tr -d '\n' ; fi
+	;;
+	"name")
+		if [[ $2 > $count ]] ; then
+			echo "Unknown"
+		else
+			disk_path="${disk[$2]}"
+			disk_model=$(lsblk -d -n -o MODEL "$disk_path" 2>/dev/null | xargs)
+			disk_size=$(lsblk -d -n -o SIZE "$disk_path" 2>/dev/null | xargs)
+
+			if [ -z "$disk_model" ] || [ "$disk_model" = "Unknown" ]; then
+				disk_name=$(basename "$disk_path")
+				echo "$disk_size $disk_name" | tr -d '\n'
+			else
+				echo "$disk_size $disk_model" | tr -d '\n'
+			fi
+		fi
+	;;
+	"test") echo -e "$1 $2 $3 $4"
+	;;
+	*) if [[ $@ > $count ]] ; then echo "999" ; else printf '%s\n' "${disk[$@]}" | tr -d '\n' ; fi
+esac

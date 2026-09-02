@@ -1,0 +1,13 @@
+' Gambas module file
+
+' Public Sub enable()
+' Shell "systemctl enable themeSwitcher.service" Wait
+' Shell "systemctl start themeSwitcher.service" Wait
+' End
+' 
+' Public Sub disable()
+'   Shell "systemctl disable themeSwitcher.service" Wait
+'   Shell "systemctl stop themeSwitcher.service" Wait
+'   Shell "ps -ef | grep python3 themeChanger | awk '{print $2}' | xargs kill"
+' End
+

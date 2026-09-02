@@ -1,0 +1,7 @@
+post_install() {
+    /usr/share/pearos/apply-lockscreen-theme.sh
+}
+
+post_upgrade() {
+    /usr/share/pearos/apply-lockscreen-theme.sh
+}

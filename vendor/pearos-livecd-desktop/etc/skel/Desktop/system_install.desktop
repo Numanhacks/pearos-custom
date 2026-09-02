@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Version=22.03
+Name=Install pearOS NiceC0re
+GenericName=pearOS Installer
+Keywords=system;installer;
+Exec=bash bin_install
+Comment=pearOS installer
+Icon=nicec0re-logo
+Terminal=false

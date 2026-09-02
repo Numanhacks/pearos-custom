@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+set -u
+
+if ! command -v chwd >/dev/null 2>&1; then
+    echo "### chwd: not present on target, attempting install (needs network)"
+    pacman -S --needed --noconfirm chwd || true
+fi
+
+if ! command -v chwd >/dev/null 2>&1; then
+    echo "### chwd: unavailable (offline install?), skipping hardware detection"
+    exit 0
+fi
+
+echo "### chwd: ensuring DKMS build prerequisites"
+
+for pkgbase in /usr/lib/modules/*/pkgbase; do
+    [ -e "$pkgbase" ] || continue
+    kernel="$(cat "$pkgbase")"
+    pacman -S --needed --noconfirm "${kernel}-headers" || true
+done
+pacman -S --needed --noconfirm dkms || true
+
+echo "### chwd: detecting hardware"
+chwd -a -f || echo "### chwd: autoconfigure reported an error, continuing"
+
+echo "### chwd: regenerating initramfs"
+mkinitcpio -P || true
+
+echo "### chwd: done"
+exit 0

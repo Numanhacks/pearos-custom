@@ -1,0 +1,53 @@
+#!/bin/bash
+#
+# ploader-sync-kernel: copies the running kernel, its initramfs, and
+# ploader_linux.conf onto the ESP (under EFI/ploader/boot/), so Ploader can
+# find and boot them without ever needing to read the root filesystem
+# directly (no efifs/btrfs_x64.efi driver required).
+#
+# This mirrors what systemd-boot does by default on Arch (Boot Loader
+# Specification): the bootloader only ever touches the FAT-formatted ESP.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; version 3 of the License.
+
+set -e
+
+if [[ $EUID -ne 0 ]]; then
+    echo "ploader-sync-kernel must be run as root." >&2
+    exit 1
+fi
+
+ESP="/boot/efi"
+DEST="$ESP/EFI/ploader/boot"
+SRC_LINUX_CONF="/boot/ploader_linux.conf"
+
+if [[ ! -d "$ESP/EFI/ploader" ]]; then
+    echo "Ploader isn't installed at $ESP/EFI/ploader -- run ploader-install first." >&2
+    exit 1
+fi
+
+mkdir -p "$DEST"
+
+shopt -s nullglob
+kernels=(/boot/vmlinuz-*)
+initrds=(/boot/initramfs-*.img)
+shopt -u nullglob
+
+if [[ ${#kernels[@]} -eq 0 ]]; then
+    echo "No /boot/vmlinuz-* found; nothing to sync." >&2
+    exit 1
+fi
+
+echo "Syncing kernel/initramfs to $DEST ..."
+cp -f "${kernels[@]}" "$DEST/"
+[[ ${#initrds[@]} -gt 0 ]] && cp -f "${initrds[@]}" "$DEST/"
+
+if [[ -f "$SRC_LINUX_CONF" ]]; then
+    cp -f "$SRC_LINUX_CONF" "$DEST/ploader_linux.conf"
+else
+    echo "Warning: $SRC_LINUX_CONF not found -- run ploader-mkrlconf --force first." >&2
+fi
+
+echo "Done. Ploader will find the kernel under EFI/ploader/boot on the ESP."

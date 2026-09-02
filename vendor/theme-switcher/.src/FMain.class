@@ -1,0 +1,64 @@
+' Gambas class file
+
+Public dark_active As Boolean
+
+Public Sub Form_Open()
+  VisualFunction()
+  DefaultBrowser()
+End
+
+Public Sub DefaultBrowser()
+  Dim t As String
+  Shell "xdg-settings get default-web-browser |  rev | cut -c9- | rev | tr -d '\n'" To t
+  cb_default_browser.Text = t
+End 
+
+Public Sub VisualFunction()
+
+  Dim s As String
+  Shell "ls /usr/share/extras/ | grep active. | tr -d '\n'" To s
+  
+  If s = "active.light" Then
+   dark_active = False 
+   Else If s = "active.dark" Then
+    dark_active = True
+  Endif 
+
+  If dark_active = True Then
+    btn_dark.Picture = Picture["dark-active.png"]
+    btn_light.Picture = Picture["light-normal.png"]
+    Else If dark_active = False Then 
+      btn_light.Picture = Picture["light-active.png"]
+      btn_dark.Picture = Picture["dark-normal.png"]
+    Endif
+End
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''
+Public Sub btn_light_Enter()                     ''
+  btn_light.Picture = Picture["light-hover.png"] ''
+End                                              ''
+Public Sub btn_light_Leave()                     ''
+  VisualFunction()                               ''
+End                                              ''
+Public Sub btn_dark_Enter()                      ''
+  btn_dark.Picture = Picture["dark-hover.png"]   ''
+End                                              ''
+Public Sub btn_dark_Leave()                      ''
+  VisualFunction()                               ''
+End                                              ''
+'''''''''''''''''''''''''''''''''''''''''''''''''''
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''
+Public Sub btn_light_MouseDown()                 ''
+  global_set.LightMode()                         ''
+  VisualFunction()                               ''
+End                                              ''
+Public Sub btn_dark_MouseDown()                  ''
+  global_set.DarkMode()                          ''
+  VisualFunction()                               ''
+End                                              ''
+'''''''''''''''''''''''''''''''''''''''''''''''''''
+
+Public Sub btn_about_Click()
+  FAbout.Show
+End

@@ -1,0 +1,26 @@
+{
+    "light": {
+      "colorScheme": "pearOS",
+      "plasmaTheme": "pearOS",
+      "iconTheme": "pearOS",
+      "cursorTheme": "pearOS-light",
+      "auroraeTheme": "__aurorae__svg__pearOS",
+      "kvantumTheme": "pearOS",
+      "gtkTheme": "pearOS-Light",
+      "sddmTheme": "pearOS",
+      "appStyle": "kvantum"
+    },
+    "dark": {
+      "colorScheme": "pearOS-dark",
+      "plasmaTheme": "pearOS-dark",
+      "iconTheme": "pearOS",
+      "cursorTheme": "pearOS-dark",
+      "auroraeTheme": "__aurorae__svg__pearOS-dark",
+      "kvantumTheme": "pearOS-dark",
+      "gtkTheme": "pearOS-Dark",
+      "sddmTheme": "pearOS-dark",
+      "appStyle": "kvantum-dark"
+    }
+  }
+  
+  

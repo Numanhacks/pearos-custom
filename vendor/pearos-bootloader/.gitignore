@@ -1,0 +1,21 @@
+# Build artifacts (produced by `make` / `makepkg`)
+*.o
+*.obj
+*.so
+*.efi
+*.a
+*.lib
+*~
+
+# ...except the bundled EFI filesystem drivers, which are checked-in
+# binaries (from efifs), not build output.
+!efifs-drivers/*.efi
+
+# makepkg
+/pkg/
+/src/
+*.pkg.tar.*
+*.log
+
+# makepkg's local VCS source cache (bare git dir it creates alongside PKGBUILD)
+/pearos-bootloader/

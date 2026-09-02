@@ -1,0 +1,47 @@
+pkgname=pearos-dock
+pkgver=26.6.10
+pkgrel=5
+pkgdesc="Tahoe-style dock for KDE Plasma 6"
+arch=('x86_64')
+url="https://github.com/pearOS-ArchLinux/pearos-dock"
+license=('GPL-2.0-or-later')
+depends=(
+    'qt6-base'
+    'qt6-declarative'
+    'ki18n'
+    'pear-temp-fix'
+)
+makedepends=(
+    'cmake'
+    'extra-cmake-modules'
+    'gcc'
+    'qt6-base'
+    'ki18n'
+    'kservice'
+    'kwindowsystem'
+    'kconfig'
+    'kconfigwidgets'
+    'kcoreaddons'
+    'kitemmodels'
+    'plasma-workspace'
+    'kwin'
+    'plasma-activities'
+    'vulkan-headers'
+)
+source=()
+
+build() {
+    cmake -S "$startdir" -B "$srcdir/build" \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_INSTALL_PREFIX=/usr
+    cmake --build "$srcdir/build"
+}
+
+package() {
+    DESTDIR="$pkgdir" cmake --install "$srcdir/build"
+
+    local skinsrc="$startdir/package/contents/skins"
+    local skindst="$pkgdir/usr/share/plasma/plasmoids/PearDock/contents/skins"
+    install -dm755 "$skindst"
+    cp -r "$skinsrc"/. "$skindst/"
+}

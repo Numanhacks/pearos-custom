@@ -1,0 +1,6 @@
+#!/bin/sh
+# Copiază iconurile Epiphany în build/data pentru rulare fără install.
+mkdir -p "@BUILD_DATA_DIR@/icons/hicolor/scalable/apps" "@BUILD_DATA_DIR@/icons/hicolor/symbolic/apps"
+cp "$1" "@BUILD_DATA_DIR@/icons/hicolor/scalable/apps/org.gnome.Epiphany.svg"
+cp "$2" "@BUILD_DATA_DIR@/icons/hicolor/symbolic/apps/org.gnome.Epiphany-symbolic.svg"
+touch "$3"

@@ -1,0 +1,17 @@
+CHANGELOG.md
+CODE_OF_CONDUCT.md
+LICENSE
+README-cn.md
+README.md
+completions
+debian
+doc
+presets
+run.sh
+screenshots
+scripts
+tests
+CMakeLists.txt
+src
+PKGBUILD
+Makefile

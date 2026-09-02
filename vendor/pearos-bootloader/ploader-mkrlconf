@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+
+# Script to create a ploader_linux.conf file for the current Linux
+# installation. Adapted from rEFInd's mkrlconf for pearOS's Ploader fork.
+
+# copyright (c) 2012-2015 by Roderick W. Smith
+#
+# This program is licensed under the terms of the GNU GPL, version 3,
+# or (at your option) any later version.
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+# Usage:
+#
+# ./ploader-mkrlconf [--force]
+#
+# Options:
+#
+#   --force  -- Overwrite an existing file (default is to not replace existing file)
+
+RLConfFile="/boot/ploader_linux.conf"
+
+if [[ $(uname -s) != "Linux" ]] ; then
+    echo "This script is intended to be run from Linux. Aborting!"
+    echo ""
+    exit 1
+fi
+
+if [[ ! -f $RLConfFile || $1 == "--force" ]] ; then
+    RootFS=$(df / | grep dev | cut -f 1 -d " ")
+    StartOfDevname=$(echo "$RootFS" | cut -b 1-7)
+    if [[ $StartOfDevname == "/dev/sd" || $StartOfDevname == "/dev/hd" ]] ; then
+        # Identify root filesystem by UUID rather than by device node, if possible
+        Uuid=$(blkid -o export -s UUID "$RootFS" 2> /dev/null | grep UUID=)
+        if [[ -n $Uuid ]] ; then
+            RootFS=$Uuid
+        fi
+    fi
+    FirstCmdlineOption=$(cut -d ' ' -f 1 < /proc/cmdline)
+    if [[ "$FirstCmdlineOption" =~ (vmlinuz|bzImage|kernel) ]] ; then
+        DefaultOptions=$(cut -d ' ' -f 2- < /proc/cmdline | sed 's/\S*initrd=\S*//g' | sed 's/ *$//' | sed 's/^ *//')
+    else
+        DefaultOptions=$(sed 's/\S*initrd=\S*//g' < /proc/cmdline | sed 's/ *$//' | sed 's/^ *//')
+    fi
+    echo "\"Boot with standard options\"  \"$DefaultOptions\"" > $RLConfFile
+    echo "\"Boot to single-user mode\"    \"$DefaultOptions single\"" >> $RLConfFile
+    echo "\"Boot with minimal options\"   \"ro root=$RootFS\"" >> $RLConfFile
+else
+    echo "Existing $RLConfFile found! Not overwriting!"
+    echo "To force overwriting, pass the --force option."
+    echo ""
+fi

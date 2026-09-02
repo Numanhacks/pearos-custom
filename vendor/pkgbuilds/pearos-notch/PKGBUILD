@@ -1,0 +1,39 @@
+pkgname=pearos-notch
+pkgver=26.6.1
+pkgrel=1
+pkgdesc="Dynamic notch widget for Linux"
+arch=('x86_64')
+url="https://pearos.xyz/"
+license=('custom')
+depends=(
+    'qt6-base'
+    'qt6-svg'
+    'libxcb'
+    'layer-shell-qt'
+)
+makedepends=(
+    'cmake'
+    'ninja'
+    'qt6-base'
+    'qt6-svg'
+    'layer-shell-qt'
+)
+install=pearos-notch.install
+# No source= — build() reads directly from $startdir (local development package)
+
+build() {
+    cmake -B "${srcdir}/build" -S "${startdir}" -G Ninja \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DWITH_LAYER_SHELL=ON
+    cmake --build "${srcdir}/build" -j$(nproc)
+}
+
+package() {
+    DESTDIR="${pkgdir}" cmake --install "${srcdir}/build"
+
+    install -Dm644 "${startdir}/pearos-notch.desktop" \
+        "${pkgdir}/usr/share/applications/pearos-notch.desktop"
+    install -Dm644 "${startdir}/pearos-notch.png" \
+        "${pkgdir}/usr/share/icons/hicolor/256x256/apps/pearos-notch.png"
+}

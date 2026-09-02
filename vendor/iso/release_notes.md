@@ -1,0 +1,300 @@
+# `Last update: 12 Aug 2026, 06:30 A.M.`
+
+# Changelog
+
+# 12 Aug 2026 RELEASE 3
+## information
+https://pearos.xyz | https://nicec0re.pearos.xyz
+
+* Added Ventoy Support
+* Added better Window Snapping Support (hover the green button on a window)
+
+# 08 Aug 2026 RELEASE 2
+## information
+https://pearos.xyz | https://nicec0re.pearos.xyz
+
+* Fixed chwd error in calares if no internet
+* Add new window borders
+<img width="862" height="569" alt="image" src="https://github.com/user-attachments/assets/6dcc0542-3a59-41b9-954a-c7433b076335" />
+* Windows now tint if you move them <br>
+* Close Button gets a black dot if a running process (i.e.: in konsole type 'sleep 20' to test)<br>
+<img width="494" height="131" alt="image" src="https://github.com/user-attachments/assets/4331a703-8f80-49c9-9266-181b050ef1a5" /> <br>
+* Added Window Tiling similar to macOS <br>
+<img width="336" height="351" alt="image" src="https://github.com/user-attachments/assets/75e9d404-1300-4bbf-af86-46e427325a1a" /><br>
+
+* Window borders got 16px rounded cornerse even in Maximized state
+<img width="336" height="351" alt="image" src="https://github.com/user-attachments/assets/456ef170-03d3-4590-99ab-d3c37b2b21b8" /><br>
+
+### Known bugs:
+* when updating from older version you need sudo pacman -Sy pear-temp-fix --noconfirm
+* pearOS calculator doesn't let you use keyboard
+* Small Grab Area when trying to move certain windows around
+* Some WiFi cards are not working (investigating(forgot to investigate actually))
+* BTRFS not working on install (investigating(forgot to investigate actually))
+* Other bugs: Please use the Issues tab in this repo. Thank you
+
+
+# 01 Aug 2026
+## Information
+https://pearos.xyz | https://nicec0re.pearos.xyz
+
+* Added Seafari Browser
+* Added New Welcome Application
+* Added More Settings in System Preferences
+* Added ploader - pearos-bootloader on the USB only(installer will use GRUB). Legacy boot is still possible
+* Fixed pearOS Lockscreen Bug
+* Fixed pacman-keys
+* Fixed OOBE errors (before it only worked in en_US, other languages crashing the installer)
+* Fixed Mouse & Trackpad settings in System Preferences
+* Removed Pafari Browser
+* Stability Improvements
+* Fix Memory Leak in System Preferences application
+
+
+### Known bugs:
+* pearOS calculator doesn't let you use keyboard
+* Small Grab Area when trying to move certain windows around
+* Some WiFi cards are not working (investigating(forgot to investigate actually))
+* BTRFS not working on install (investigating)
+* Other bugs: Please use the Issues tab in this repo. Thank you
+
+
+## 16 Jun 2026
+## Information
+https://pearos.xyz | https://nicec0re.pearos.xyz
+* Added Dynamic Island
+* Added Tray in Notch/Dynamic Island
+* Added Liquid Gel Slider
+* Added Golden Gate Wallpapers
+* Added auto dark/light mode theme (not tested)
+* Added new dock
+* Added Zoom animation on dock
+* Added New Dock settings in System Settings
+* Added Boot Sound
+* Added modal that asks if you want online or offline install
+* Added new Global Menu widget
+* Added the ability to change folder color based on the accent color
+* Added New Lockscreen
+* Added Notch settings (size, distance, offset)
+* Added dock settings (size, distance, offset, zoom amount, amplitude etc)
+* Added Fix Layout in the Welcome App that restores your layout to the pearOS default one
+* Added CachyOS 6.18 kernel
+* Added Close button that hides a window instead of closing, like in macOS, now need to ctrl/win+Q to quit or ALT+F4
+* Fixed AppStore
+* Fixed Notch glitching when hover
+* Fixed pearOS System Settings ( electron JS -> C++ Qt6 )
+* Fixed top menu (rewrote the plasmoid as standalone package 'pearos-appmenu')
+* Fixed dock problems (rewrote the plasmoid as standalone package ('pearos-dock')
+* Fixed post-install failed to remove user 'default' -> now creates a single-shot linux service that removes the user after installation
+* Fixed pearID (?)
+* Fixed COMMAND + SPACE not opening the App Drawer
+* Fixed Dark-Light theme switching, now it won't restart Plasmashell
+* Fixed Accent-Color switching, not it won't restart Plasmashell
+* Fixed high memory usage and slow Settings Startup ( electron -> C++ Qt6)
+* Fixed Pafari not launching
+
+### Known bugs:
+* pearOS calculator doesn't let you use keyboard
+* Pafari search bar inconsistences (UI)
+* Lockscreen sometimes doesn't unlock. You must start a TTY session and use 'loginctl unlock-session x' to get around
+* Small Grab Area when trying to move certain windows around
+* Some WiFi cards are not working (investigating)
+* Other bugs: Please use the Issues tab in this repo. Thank you
+
+# 09 Apr 2026
+## Information
+https://pearos.xyz | https://nicec0re.pearos.xyz
+* Fixed missing linux-firmware
+* Fixed unable to get the ky in OOBE screen
+* Fixed notch (finally?)
+* Fixed weird cursors in the AppStore app
+
+## 08 Apr 2026
+## Information
+https://pearos.xyz | https://nicec0re.pearos.xyz
+
+* Moved package repository to a better server (Cloudflare R2 Storage)
+* Fixed Offline Installer (hopefully)
+* Installing packages from the packages repo now require public key, included in the pearos-keyring package
+* Add pearos-keyring
+* Add better ZSH Config
+* Add boot chime (hope it works)
+* Fix updater
+* Fix light theme
+* Fix online installer (I guess)
+
+### Known Bugs
+* Some WiFi cards are not working (?)
+* automatic theme not yer implemented
+* pearOS Notch Not working smoothly, expecting fix in 26.4
+* Other bugs: Please use the Issues tab in this repo. Thank you
+
+
+
+## 11 Mar 2026
+## Information
+https://pearos.xyz
+
+* Add Dual Boot Support
+* Add Offline Installer Support(hold ⌥ while clicking Continue with Install pearOS selected in installer to enable Offline & Dualboot)
+* Add Calculator App
+* Add To-Do App
+* Add Contacts App
+* Add Notes App
+* Add Calendar App
+* Add Notch
+* Add nVidia drivers
+* Add Qemu Guest utils
+* Add Better Wayland Support
+* Add Close button will HIDE the app instead of closing(the bitten fruit way)
+* Add Hover effects to the CLS/MIN/MAX buttons
+* Fixed Better LiquidGel Rules
+* Fixed Most of the rounded corners
+* Fixed Launcher Dark Icon
+* Fixed wrong Window Borders
+* Fixed Piri Download Quota Exceeded
+* About pearOS app: Switched from Electron to C++
+* Switched ark -> file-roller
+
+### Known Bugs
+* Some WiFi cards are not working (?)
+* automatic theme not yer implemented
+* pearOS Notch Not working smoothly, expecting fix in 26.4
+* Other bugs: Please use the Issues tab in this repo. Thank you
+
+## 09 Feb 2026
+## Information
+https://pearos.xyz
+
+* X11 -> Wayland
+* Added Liquid Gel
+* Added Touchpad Settings into Settings Application
+* Added Pir Voice Assistant
+* Added Profile Picture in installer & Lock Screen
+* Added cusotm profile Picture (Requires pearID)
+* New lockscren
+* Custom Watch Fonts in lockscreen
+* New Fonts in Setting > Wallpapers > Customise Clock Appearance
+* Fixed installer
+* UI fixes
+* Fixed Dowloads Folder fan view effect
+* ... probably more which I forgot to mention :)
+
+### Known Bugs
+* Some WiFi cards are not working
+* automatic theme not yer implemented
+* Other bugs: Please use the Issues tab in this repo. Thank you
+
+
+## 11 Dec 2025
+## Information
+```
+The ISO file is now on an S3 bucket so expect high download speeds now
+This update features pearID and a new settings app, with various updates
+```
+https://pearos.xyz
+
+* fix rubbish bin icon
+* fix light theme
+* fix plasmoids not working on plasma 6.5.3
+* UPDATE plasma to 6.5.3 (previous: 6.3.x)
+* WORKAROUND: Plasma 6.5 set Wayland as defaule, I forced it to X11
+* NEW settings app
+* NEW about app
+* NEW global menu plasmoid
+* NEW downloads folder with fan view effect
+* NEW Finder-like icon in the dock
+* NEW Dock rework
+* NEW pearID
+
+### Known bugs
+* Some apps not working good on Wayland seessions(see workaround)
+* Graphical BUG in  Settings > Game Center
+* Sometimes on fresh installs theme is not applied properly. To fix this you have to
+   get into System Settings > Appearance > and reapply a theme (dark/light)
+* Automatic theme not yet implemented
+* Other bugs: Please use the Issues tab in this repo. Thank you
+
+## 31 October 2025
+
+## Information
+```
+ISO file moved to the personal server, it is 3.3GB in size, and GitHub file size limitation is only 2 GB
+```
+https://pearos.xyz
+
+* fixed installer (hopefully it should auto repair itself when a package breaks or a signature gets expired/revoked)
+* fixed progress bar
+* updated design
+* updated broken packages
+* updated package repository(github -> personal server)
+* added boot sound
+* added plymouth theme
+* added Hello screen after install
+* added Activity bar to the installer
+* added (half broken) control center (WIP)
+* updated kernel to 6.17_MANJARO
+* updated to plasma 6
+* updated to Tahoe design
+* updated Splash Screen
+* removed useless packages
+* removed gambas dependency
+* removed all previously made pearOS apps, new apps are coming soon
+
+## 18 October 2023
+* fixed the gnome package kit error
+* updated packages
+* refreshed keys
+
+## 30 January 2023:
+* fixed pearOS installer
+* updated packages
+* refreshed keys
+
+## 9 August 2022:
+* fixed failed install due to the wrong electron version ( `electron11` instead of `electron` package was installed)
+## 5 July 2022:
+* The installer no longer lets the user to install on a USB (resoves the 'I accidentally installed pearOS on the bootable usb instead of my HDD' problem)
+* The installer no longer lets the user to install pearOS without an internet connection. (resolves the 'I pressed install, but it fails here is the install log alex' problem)
+
+# How do I install?
+1. Connect to the internet
+2. Double click on the Install icon form dekstop
+3. Select your installer language
+4. Agree to the Arch Linux Terms and Conditions
+5. Select your disk
+5.1. If you have troubles finding your disk, use the options in the toolbar to get the device where you want to install
+6. Confirm the install
+7. Save log in case of error (Localted on `~/Desktop/` )
+8. Reboot your machine. You can unplug your USB drive now
+9. The Setup will ask you to set:
+* System locale
+* Keymap (also called `Keyboard Layout`). The standard keyboard found in most computers is the `English U.S.` layout
+* Select your time zone (500+ available time-zones)
+* Create your local computer account. Full name, user, password and password confirm are required in order to install pearOS
+* Agree to the License Agreement of Arch Linux.
+* The setup will commit your changes and will automatically reboot.
+
+# Important:
+* The installer will WIPE the selected disk as soon as you press Continue in the Disk Selector window(I could add the option to partition, but this is how Apple does: Wipe the entire disk, so I chose the same approach)
+* This build might be unstable. 
+* <b><i>Report all bugs here as an issue, or in DMs(instagram, discord, twitter) or by mail. To help improve pearOS quality, I need user's feedback!!</i></b>
+
+# Note:
+* ~~VMWare tools will be automatically installed after setup (if you are in VMWare)~~ need to check
+* ~~VirtualBox Guest Additions will be automatically installed after setup (if you are in VirtualBox)~~  need to check
+*<b> I am not responsible of any data loss that may occour during the (failed) installation. </b>
+
+# Roadmap
+ * Develop the pearOS Desktop Environment (named Soda)
+ * ~~Switch to a GTK Desktop Environment until I finish developing the Soda DE(shortly: SDE)~~ Keeping KDE, SDE is Work in Progress, however don t expect it soon
+ * Add a theme chooser in the post-install application -- Work in Progress
+ * Add `Refresh Disks` button in the Disk Selector app -- Work in Progress
+ * Develop piri (expected in 26.1) -- Work in Progress
+ * Develop auto-theme. It changes based on the TOD (Time Of the Day) -- Work in Progress
+ * ~~Pre-install `gparted` in the LIVE environment. Needed to format and manage boot disks~~ DONE
+  * ~~Add disks label under `/dev/sdX` so the users will identify disks more easy~~ DONE
+ * ~~Add error handling, so you will know when something goes wrong with the installer (added 'no internet' handler)~~ DONE
+
+**Full Changelog**: https://github.com/pearOS-archlinux/iso/compare/v25.10...v25.12_relese_candidate
+

@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+#
+# Applies NVIDIA-specific environment variables when the live session is
+# actually going to run on the NVIDIA stack shipped on this ISO.
+#
+# Previously this keyed off the `driver=nonfree` kernel cmdline parameter. That
+# parameter is gone: nvidia-module-loader now decides at module-load time based
+# on what chwd detects, so we ask chwd the same question. This is deterministic
+# and does not depend on whether the module has loaded yet when we run.
+#
+# It is safe to run multiple times (idempotent).
+#
+
+env_file="/etc/environment"
+
+_drop_env() {
+  if [[ -e "${env_file}" ]] && grep -Fq "pearOS-nvidia-env" "${env_file}" 2>/dev/null; then
+    rm -f "${env_file}"
+  fi
+}
+
+# No chwd, no detection -- assume nouveau and leave the environment clean.
+if ! command -v chwd >/dev/null 2>&1; then
+  _drop_env
+  exit 0
+fi
+
+# Same predicate as nvidia-module-loader: an older GPU means nouveau, because
+# the 470xx/580xx branches are not on the ISO.
+if chwd --list | awk '{ if($2 == "nouveau" || $2 == "nvidia-dkms-470xx" || $2 == "nvidia-dkms-580xx") f=1 } END {exit (f == 1) ? 0 : 1 }'; then
+  _drop_env
+  exit 0
+fi
+
+# Only the open profile means the nvidia modules on this ISO bind to the GPU.
+if ! chwd --list | awk '{ if($2 == "nvidia-open-dkms") f=1 } END {exit (f == 1) ? 0 : 1 }'; then
+  _drop_env
+  exit 0
+fi
+
+cat > "${env_file}" <<'EOF'
+# pearOS-nvidia-env
+QT_QPA_PLATFORMTHEME="wayland;xcb"
+GBM_BACKEND=nvidia-drm
+__GLX_VENDOR_LIBRARY_NAME=nvidia
+ENABLE_VKBASALT=1
+LIBVA_DRIVER_NAME=nvidia
+WLR_NO_HARDWARE_CURSORS=1
+EOF
+
+chmod 0644 "${env_file}"
+exit 0

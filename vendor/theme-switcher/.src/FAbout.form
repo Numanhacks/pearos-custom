@@ -1,0 +1,45 @@
+# Gambas Form File 3.0
+
+{ Form Form
+  MoveScaled(0,0,59,69)
+  Text = ("Theme Switcher  -  About")
+  Icon = Picture["themeChangerIcon.png"]
+  { Label1 Label
+    MoveScaled(1,65,22,4)
+    Font = Font["-3"]
+    Text = ("Copyright © 2021 Alexandru Balan")
+  }
+  { Label2 Label
+    MoveScaled(15,31,24,4)
+    Alignment = Align.Center
+    Text = ("Theme Switcher")
+  }
+  { lbl_version Label
+    MoveScaled(13,34,28,4)
+    Font = Font["FreeMono"]
+    Alignment = Align.Center
+    Text = ("Version 1.0 (oct. 2021)")
+  }
+  { Label4 Label
+    MoveScaled(52,62,8,3)
+    Font = Font["DejaVu Sans Mono,-3"]
+    Text = ("Authors:")
+  }
+  { Label5 Label
+    MoveScaled(29,64,30,4)
+    Font = Font["DejaVu Sans Mono,-3"]
+    Alignment = Align.Right
+    Text = ("Alexandru Balan (alxb421#4330)")
+  }
+  { PictureBox1 PictureBox
+    MoveScaled(19,15,16,16)
+    Picture = Picture.Load("themeChangerIcon.png")
+    Mode = PictureBox.Contain
+  }
+  { Label7 Label
+    MoveScaled(35,66,24,4)
+    Font = Font["DejaVu Sans Mono,-3"]
+    Alignment = Align.Right
+    Text = ("Andrei Muntean (equal#7149)")
+  }
+}

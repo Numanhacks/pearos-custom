@@ -1,0 +1,534 @@
+#!/bin/bash
+
+# Setting useful variables
+DIR="/usr/share/pearOS-installer/post-install"
+installed=true
+hypervisor=$(systemd-detect-virt)
+
+# Log on desktop (default user when post-install runs after first boot)
+LOG_DIR="/home/default/Desktop"
+mkdir -p "$LOG_DIR"
+LOG_FILE="$LOG_DIR/post-install.log"
+ERROR_FILE="/tmp/post-install-error"
+rm -f "$ERROR_FILE"
+
+exec > >(tee -a "$LOG_FILE")
+exec 2>&1
+
+# Stop on first error and show it instead of freezing
+error_exit() {
+  local msg="$1"
+  echo "POST_INSTALL_ERROR: $msg" >> "$LOG_FILE"
+  echo "$msg" > "$ERROR_FILE"
+  echo "ERROR: $msg" >&2
+  exit 1
+}
+
+has_internet() {
+  ping -c 1 -W 3 8.8.8.8 &>/dev/null || curl -s --max-time 3 https://archlinux.org &>/dev/null
+}
+
+echo "=== pearOS Post-Install Script Started: $(date) ==="
+set -x
+
+if [ "$#" -ne 9 ]; then
+  echo "KEYMAP=$1"
+  echo "LOCALE=$2"
+  echo "ZONE=$3"
+  echo "user_passwd=(hidden)"
+  echo "FULL_NAME=$5"
+  echo "USER_NAME=$6"
+  echo "HOST_NAME=$7"
+  echo "UTC_ENABLED=$8"
+  echo "THEME_MODE=$9"
+  echo " ^ The above list represents your selected configurations."
+  echo "Invalid number of arguments (expected 9)." > "$ERROR_FILE"
+  exit 2
+fi
+
+# Various settings for the installation process
+KEYMAP="$1" # us
+LOCALE="$2" # en_US.UTF-8
+ZONE="$3" # Europe/Bucharest
+set +x
+user_passwd="$4" # user password: pear
+set -x
+FULL_NAME="$5" # Full Name
+USER_NAME="$6" # username (to log into your system)
+HOST_NAME="$7" # hostname for the system
+utc_enabled="$8" # true | false, from UI checkbox
+THEME_MODE="$9" # dark | light, chosen on the "Choose Your Look" page
+
+# Check the username
+if printf "%s" "$USER_NAME" | grep -Eoq "^[a-z][a-z0-9-]*$" \
+  && [ "${#USER_NAME}" -lt 33 ]; then
+  if grep -Fxq "$USER_NAME" "$DIR"/reserved_usernames; then
+    echo "Reserved username: $USER_NAME. Abort." > "$ERROR_FILE"
+    exit 2
+  fi
+  else
+    echo "Invalid Username: $USER_NAME. Abort." > "$ERROR_FILE"
+    exit 2
+  fi
+
+# Remove the script from the autostart
+echo "Removing autostart entry..."
+rm -rf /etc/skel/.config/autostart/xyz.pearos-post-install.desktop
+
+# ── Security-critical: create the real user + lock down 'default' ──────
+# Done FIRST, before any config step below (keymap, locale, timezone,
+# hostname, grub-mkconfig, ...). 'default' has passwordless root
+# (NOPASSWD:ALL) + autologin from the base install; if account creation
+# and 'default' removal were scheduled only near the end of this script,
+# any earlier failure (bad keymap, locale.gen quirk, grub.cfg generation
+# failing because /boot isn't mounted, etc.) would abort the script before
+# ever locking the device down, leaving every shipped device permanently
+# unauthenticated root on every boot.
+
+echo "Creating user $USER_NAME..."
+if ! useradd -m -g users -G wheel -s /bin/bash -c "$FULL_NAME" "$USER_NAME"; then
+  error_exit "Failed to create user: $USER_NAME"
+fi
+
+echo "User $USER_NAME created successfully with sudo access"
+
+set +x
+if ! chpasswd <<<"$USER_NAME:$user_passwd"; then
+  set -x
+  error_exit "Failed to set password for $USER_NAME"
+fi
+set -x
+
+# Remove 'default' user on next boot via a systemd oneshot service.
+# Must run BEFORE sddm.service so the user never appears on the login screen.
+# We cannot delete the user directly here because the Electron post-install
+# app runs as 'default', keeping active processes and open file handles in
+# /home/default — userdel would fail with "cannot remove user default".
+echo "Scheduling removal of default user on next boot..."
+if id "default" &>/dev/null; then
+  cat > /etc/systemd/system/pearos-remove-default-user.service << 'UNIT'
+[Unit]
+Description=Remove pearOS default live user
+DefaultDependencies=no
+Before=sddm.service display-manager.service
+After=local-fs.target systemd-user-sessions.service
+ConditionPathExists=/home/default
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/userdel -rf default
+ExecStartPost=/bin/systemctl disable pearos-remove-default-user.service
+ExecStartPost=/bin/rm -f /etc/systemd/system/pearos-remove-default-user.service
+
+[Install]
+WantedBy=sysinit.target
+UNIT
+  if ! systemctl enable pearos-remove-default-user.service; then
+    error_exit "Failed to schedule removal of default user"
+  fi
+  echo "Default user will be removed before SDDM starts on next boot"
+else
+  echo "Default user does not exist, skipping..."
+fi
+
+# Set/load the keymap
+echo "Setting keymap to $KEYMAP..."
+if ! localectl set-keymap "$KEYMAP"; then
+  error_exit "Failed to set keymap: $KEYMAP"
+fi
+if ! loadkeys "$KEYMAP"; then
+  error_exit "Failed to load keymap: $KEYMAP"
+fi
+
+# Pushing Timezone to localtime file
+echo "Setting timezone to $ZONE..."
+if ! ln -sf /usr/share/zoneinfo/"$ZONE" /etc/localtime; then
+  error_exit "Failed to set timezone: $ZONE"
+fi
+
+# Enable or disable UTC time
+echo "Configuring hardware clock..."
+if $utc_enabled; then
+  if ! hwclock --systohc --utc; then
+    error_exit "Failed to set hardware clock to UTC"
+  fi
+else
+  if ! hwclock --systohc --localtime; then
+    error_exit "Failed to set hardware clock to localtime"
+  fi
+fi
+
+# Passing custom locale to locale file
+echo "Configuring locale: $LOCALE..."
+if [ "$LOCALE" != "en_US.UTF-8" ]; then
+  if ! sed -i "s/#$LOCALE/$LOCALE/" /etc/locale.gen; then
+    error_exit "Failed to configure locale in /etc/locale.gen"
+  fi
+fi
+
+# making the language equal to the locale, and passing to locale.conf
+if ! echo "LANG=$LOCALE" | tee /etc/locale.conf; then
+  error_exit "Failed to write /etc/locale.conf"
+fi
+
+# If there is a custom keymap, add it to the vconsole
+if [ "$KEYMAP" != "us" ]; then
+  echo "Configuring custom keymap..."
+  if ! echo "KEYMAP=$KEYMAP" | tee /etc/vconsole.conf; then
+    error_exit "Failed to write /etc/vconsole.conf"
+  fi
+fi
+
+# Configure X11 keyboard layout (for X11 desktop environments)
+# Note: localectl set-keymap (called above) works for both X11 and Wayland
+# This X11-specific config ensures compatibility with X11-only applications
+if [ -d /usr/share/X11 ]; then
+  echo "Configuring X11 keyboard layout..."
+  if ! mkdir -p /etc/X11/xorg.conf.d; then
+    echo "ERROR: Failed to create /etc/X11/xorg.conf.d directory" >&2
+    exit 1
+  fi
+    if ! echo -e "Section \"InputClass\"\nIdentifier \"system-keyboard\"\nMatchIsKeyboard \"on\"\nOption \"XkbLayout\" \"$KEYMAP\"\nEndSection" > /etc/X11/xorg.conf.d/00-keyboard.conf; then
+      error_exit "Failed to configure X11 keyboard"
+    fi
+  fi
+
+# Note: For Wayland, localectl set-keymap (called above) is sufficient
+# Most Wayland compositors (including Plasma Wayland) read keyboard layout from systemd/localectl
+# Individual compositors may have additional config files, but localectl covers the base configuration
+
+# Committing the locale settings
+echo "Generating locale..."
+if ! locale-gen; then
+  error_exit "Failed to generate locale"
+fi
+
+# Setting the hostname
+echo "Setting hostname to $HOST_NAME..."
+if ! echo "$HOST_NAME" | tee /etc/hostname; then
+  error_exit "Failed to set hostname"
+fi
+
+# Add the grub theme to the configuration file
+echo "Generating grub configuration..."
+if ! grub-mkconfig -o /boot/grub/grub.cfg; then
+  error_exit "Failed to generate grub configuration"
+fi
+
+# Sync system clock before GPG operations only if internet is available.
+# A skewed clock causes "key created in the future" GPG errors.
+echo "Checking internet connectivity..."
+if has_internet; then
+  echo "Internet available. Synchronizing system clock..."
+  timedatectl set-ntp true
+  for i in $(seq 1 10); do
+    timedatectl show | grep -q "NTPSynchronized=yes" && break
+    sleep 2
+  done
+  if ! timedatectl show | grep -q "NTPSynchronized=yes"; then
+    echo "WARNING: NTP sync did not complete in time, GPG key signing may fail" >&2
+  fi
+else
+  echo "No internet. Skipping NTP sync."
+fi
+
+# Initialize and trust pearOS maintainer key on installed system
+# timeout 120s: pacman-key --init can block for minutes on VMs due to low entropy
+echo "Initializing pacman keyring (may take up to 2 minutes)..."
+if ! timeout 120 pacman-key --init; then
+  echo "WARNING: pacman-key --init timed out or failed, continuing..." >&2
+fi
+if ! pacman-key --populate; then
+  echo "WARNING: pacman-key --populate failed, continuing..." >&2
+fi
+if ! pacman-key --lsign-key 4C1A9F3C131ACA95; then
+  echo "WARNING: Failed to locally sign pacman key 4C1A9F3C131ACA95, continuing..." >&2
+fi
+if ! pacman-key -a "$DIR/inled-archive.key"; then
+  echo "WARNING: Failed to import inled pacman key, continuing..." >&2
+fi
+if ! pacman-key --lsign-key 89F828A9675B63CD0077CE9965AA57CF36E2018F; then
+  echo "WARNING: Failed to locally sign inled pacman key, continuing..." >&2
+fi
+
+# Backup sudoers before modifying
+echo "Configuring sudo access..."
+if [ -f /etc/sudoers ]; then
+  cp /etc/sudoers /etc/sudoers.backup.$(date +%Y%m%d_%H%M%S)
+fi
+
+if ! sed -i 's/# %wheel ALL=(ALL) ALL$/%wheel ALL=(ALL) ALL/' /etc/sudoers; then
+  error_exit "Failed to configure sudoers"
+fi
+
+echo "Adding user to wheel group..."
+if ! echo "$USER_NAME   ALL=(ALL) ALL" | tee -a /etc/sudoers; then
+  error_exit "Failed to add user to wheel group in sudoers"
+fi
+if ! visudo -c -f /etc/sudoers; then
+  error_exit "Sudoers file is invalid after modification"
+fi
+
+# NOPASSWD for specific pearOS apps (avoids password prompt for these only)
+echo "Configuring passwordless sudo for pearOS apps..."
+cat > /etc/sudoers.d/pearos-apps << EOF
+$USER_NAME ALL=(ALL) NOPASSWD: /usr/bin/pearos-appstore, /usr/bin/pearos-welcome
+EOF
+chmod 0440 /etc/sudoers.d/pearos-apps
+if ! visudo -c -f /etc/sudoers.d/pearos-apps; then
+  rm -f /etc/sudoers.d/pearos-apps
+  error_exit "Invalid sudoers.d/pearos-apps file, removed"
+fi
+
+# Profile picture: ~/.face.icon for new user and SDDM themes (critical for login screen)
+echo "Setting profile picture (avatar)..."
+PROFILE_PIC_FILE="/tmp/profile_picture"
+if [ -f "$PROFILE_PIC_FILE" ] && [ -s "$PROFILE_PIC_FILE" ]; then
+  PROFILE_PIC_SRC="$(cat "$PROFILE_PIC_FILE" | tr -d '\n\r')"
+  # Only accept pictures bundled with the app (app/resources/profiles) -
+  # this file is attacker-writable /tmp state, so resolve symlinks/.. and
+  # reject anything outside the whitelisted directory before this root
+  # script copies it anywhere (avoids leaking arbitrary root-readable files).
+  PROFILE_PICS_DIR="$(realpath -m "$DIR/app/resources/profiles")"
+  PROFILE_PIC_SRC="$(realpath -e "$PROFILE_PIC_SRC" 2>/dev/null)"
+  case "$PROFILE_PIC_SRC" in
+    "$PROFILE_PICS_DIR"/*) ;;
+    *) echo "Rejected profile picture path outside $PROFILE_PICS_DIR" >&2; PROFILE_PIC_SRC="" ;;
+  esac
+  if [ -n "$PROFILE_PIC_SRC" ] && [ -f "$PROFILE_PIC_SRC" ] && [ -r "$PROFILE_PIC_SRC" ]; then
+    # 1. New user's home avatar
+    USER_HOME="/home/$USER_NAME"
+    USER_FACE="$USER_HOME/.face.icon"
+    if [ -d "$USER_HOME" ]; then
+      if ! cp -f "$PROFILE_PIC_SRC" "$USER_FACE"; then
+        error_exit "Failed to copy profile picture to $USER_FACE"
+      fi
+      chown "$USER_NAME:users" "$USER_FACE" 2>/dev/null || true
+      echo "Profile picture set for user $USER_NAME"
+    fi
+
+    # 1b. AccountsService (what SDDM's multi-user list actually reads: home
+    # directories are 0700 per login.defs HOME_MODE, so the sddm daemon user
+    # can't stat ~/.face.icon - /var/lib/AccountsService/icons is world-
+    # readable and is what qmlUserModel.icon resolves against first).
+    ACCOUNTSSERVICE_ICONS_DIR="/var/lib/AccountsService/icons"
+    ACCOUNTSSERVICE_USERS_DIR="/var/lib/AccountsService/users"
+    ACCOUNTSSERVICE_ICON="$ACCOUNTSSERVICE_ICONS_DIR/$USER_NAME"
+    if mkdir -p "$ACCOUNTSSERVICE_ICONS_DIR" "$ACCOUNTSSERVICE_USERS_DIR"; then
+      if cp -f "$PROFILE_PIC_SRC" "$ACCOUNTSSERVICE_ICON"; then
+        chmod 0644 "$ACCOUNTSSERVICE_ICON"
+        cat > "$ACCOUNTSSERVICE_USERS_DIR/$USER_NAME" << EOF
+[User]
+Icon=$ACCOUNTSSERVICE_ICON
+SystemAccount=false
+EOF
+        chmod 0600 "$ACCOUNTSSERVICE_USERS_DIR/$USER_NAME"
+        echo "Profile picture registered with AccountsService for $USER_NAME"
+      else
+        echo "WARNING: Failed to copy profile picture to $ACCOUNTSSERVICE_ICON" >&2
+      fi
+    else
+      echo "WARNING: Failed to create AccountsService directories" >&2
+    fi
+
+    # 2. Extras (global profile picture)
+    EXTRAS_FACE="/usr/share/extras/.face.icon"
+    if ! mkdir -p /usr/share/extras; then
+      error_exit "Failed to create /usr/share/extras"
+    fi
+    if ! cp -f "$PROFILE_PIC_SRC" "$EXTRAS_FACE"; then
+      error_exit "Failed to copy profile picture to $EXTRAS_FACE"
+    fi
+    if [ ! -f "$EXTRAS_FACE" ] || [ ! -s "$EXTRAS_FACE" ]; then
+      error_exit "Profile picture missing or empty after copy: $EXTRAS_FACE"
+    fi
+    echo "Profile picture set in /usr/share/extras"
+
+    # 3. SDDM themes – mandatory; do not skip
+    # pearOS theme uses images/.face.icon as fallback (Main.qml); some use faces/.face.icon
+    SDDM_THEMES="pearOS pearOS-dark"
+    for theme in $SDDM_THEMES; do
+      THEME_ROOT="/usr/share/sddm/themes/$theme"
+      for subdir in faces images; do
+        SDDM_DIR="$THEME_ROOT/$subdir"
+        SDDM_FACE="$SDDM_DIR/.face.icon"
+        if ! mkdir -p "$SDDM_DIR"; then
+          error_exit "Failed to create SDDM directory: $SDDM_DIR"
+        fi
+        if ! cp -f "$PROFILE_PIC_SRC" "$SDDM_FACE"; then
+          error_exit "Failed to copy profile picture to SDDM theme $theme ($subdir): $SDDM_FACE"
+        fi
+        if [ ! -f "$SDDM_FACE" ] || [ ! -s "$SDDM_FACE" ]; then
+          error_exit "SDDM profile picture missing or empty after copy: $SDDM_FACE"
+        fi
+      done
+      echo "Profile picture set for SDDM theme: $theme (faces + images)"
+    done
+  else
+    echo "Profile picture source missing or not readable: $PROFILE_PIC_SRC" >&2
+  fi
+else
+  echo "No profile picture selected (/tmp/profile_picture missing or empty), skipping avatar setup"
+fi
+
+# Fix extras files permissions (fixes the theme-switcher bug)
+echo "Fixing permissions for extras..."
+if ! chmod -R 0777 /usr/share/extras; then
+  echo "WARNING: Failed to set permissions on /usr/share/extras" >&2
+fi
+
+# Apply the dark/light look chosen on the "Choose Your Look" page to the
+# newly created user (cosmetic, non-fatal on failure).
+echo "Applying theme preference for $USER_NAME..."
+THEME_SWITCHER="/usr/share/extras/system-settings/themeswitcher/kde-theme-switch.sh"
+THEME_STATE_FILE="/usr/share/extras/system-settings/themeswitcher/state"
+case "$THEME_MODE" in
+  dark|light) ;;
+  *)
+    # Defensive fallback if THEME_MODE wasn't 'dark'/'light' (shouldn't
+    # happen - the UI always sends one of the two): reuse whatever 'default'
+    # had, same detection the theme switcher uses internally.
+    THEME_MODE="light"
+    if [ -f "$THEME_STATE_FILE" ]; then
+      saved_mode="$(tr '[:upper:]' '[:lower:]' < "$THEME_STATE_FILE" | tr -d '\n\r\t ')"
+      [ "$saved_mode" = "dark" ] && THEME_MODE="dark"
+    elif [ -d /home/default ]; then
+      default_scheme="$(su - default -c 'kreadconfig6 --file kdeglobals --group General --key ColorScheme' 2>/dev/null || echo "")"
+      echo "$default_scheme" | grep -qi "dark" && THEME_MODE="dark"
+    fi
+    ;;
+esac
+echo "Theme mode to apply: $THEME_MODE"
+# kde-theme-switch.sh needs a real, running Plasma session (DBus, XDG_RUNTIME_DIR)
+# to fully apply itself (GTK/Kvantum/etc components run partially otherwise).
+# The new user has no session yet at this point in the script, so instead of
+# faking one, drop a one-shot autostart entry that runs the switcher on the
+# user's own first real login, then deletes itself (script + .desktop file).
+if [ -x "$THEME_SWITCHER" ] && [ -d "/home/$USER_NAME" ]; then
+  USER_HOME="/home/$USER_NAME"
+  AUTOSTART_DIR="$USER_HOME/.config/autostart"
+  SCRIPTS_DIR="$USER_HOME/.config/pearos-scripts"
+  FIRST_THEME_SCRIPT="$SCRIPTS_DIR/apply-first-theme.sh"
+  FIRST_THEME_DESKTOP="$AUTOSTART_DIR/pearos-first-theme.desktop"
+
+  mkdir -p "$AUTOSTART_DIR" "$SCRIPTS_DIR"
+
+  cat > "$FIRST_THEME_SCRIPT" << EOF
+#!/bin/bash
+"$THEME_SWITCHER" --$THEME_MODE
+rm -f "$FIRST_THEME_DESKTOP"
+rm -f "\$0"
+EOF
+  chmod +x "$FIRST_THEME_SCRIPT"
+
+  cat > "$FIRST_THEME_DESKTOP" << EOF
+[Desktop Entry]
+Type=Application
+Exec=bash "$FIRST_THEME_SCRIPT"
+Hidden=false
+NoDisplay=true
+X-GNOME-Autostart-enabled=true
+Name=pearOS First Theme Setup
+EOF
+
+  chown -R "$USER_NAME:users" "$AUTOSTART_DIR" "$SCRIPTS_DIR" 2>/dev/null || true
+  echo "Scheduled theme application for $USER_NAME on first login"
+else
+  echo "Theme switcher not found or $USER_NAME home missing, skipping theme sync" >&2
+fi
+
+# Remove useless packages and their desktop entries
+echo "Removing unnecessary packages..."
+if ! yes | LC_ALL=en_US.UTF-8 pacman -R electron npm plasma-sdk discover pearos-livecd-desktop; then
+  echo "WARNING: Some packages failed to remove" >&2
+fi
+
+echo "Removing desktop entries..."
+rm -rf /usr/share/applications/avahi-discover.desktop \
+       /usr/share/applications/bssh.desktop \
+       /usr/share/applications/bvnc.desktop \
+       /usr/share/applications/qv4l2.desktop \
+       /usr/share/applications/qvidcap.desktop \
+       /usr/share/applications/org.kde.plasma.emojier \
+       /usr/share/applications/calamares*
+
+# Remove sddm.conf > it is set to autologin user 'default', which breaks the system
+echo "Removing old SDDM configuration..."
+if [ -f /etc/sddm.conf ]; then
+  cp /etc/sddm.conf /etc/sddm.conf.backup.$(date +%Y%m%d_%H%M%S)
+  rm -f /etc/sddm.conf
+fi
+
+# Installing yay helper (requires internet)
+if has_internet; then
+  git clone https://aur.archlinux.org/yay.git /tmp/yay-build && \
+    chown -R default:users /tmp/yay-build && \
+    su -c "cd /tmp/yay-build && makepkg -si --noconfirm" default && \
+    rm -rf /tmp/yay-build || echo "WARNING: yay installation failed, skipping" >&2
+else
+  echo "No internet. Skipping yay installation."
+fi
+
+# Installing plymouth
+#yay -S plymouth --noconfirm
+
+# Setting pearOS plymouth theme
+#plymouth-set-default-theme -R pear-plymouth
+
+# Fixing the SDDM theme
+echo "Configuring SDDM theme..."
+cat > /etc/sddm.conf << 'EOF'
+[Autologin]
+Session=plasma
+
+[Theme]
+Current=pearOS
+EOF
+
+if [ $? -ne 0 ]; then
+  error_exit "Failed to write SDDM configuration"
+fi
+
+# Liquid Gel: requires internet to download source and packages
+if has_internet; then
+  echo "Installing cmake and extra-cmake-modules for Liquid Gel build..."
+  if ! pacman -S --noconfirm cmake extra-cmake-modules 2>> "$LOG_FILE"; then
+    echo "Warning: Failed to install cmake/extra-cmake-modules" >&2
+  fi
+
+  echo "Downloading Liquid Gel"
+  if git clone https://github.com/pearOS-archlinux/liquid-gel /tmp/liquid-gel 2>> "$LOG_FILE"; then
+    echo "Liquid Gel Downloaded..."
+  else
+    echo "Failed to download Liquid Gel" >&2
+  fi
+
+  if [ -d /tmp/liquid-gel ]; then
+    echo "Compiling Liquid Gel"
+    if ( cd /tmp/liquid-gel && mkdir -p build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/usr && make -j"$(nproc)" 2>> "$LOG_FILE" && make install 2>> "$LOG_FILE" ); then
+      echo "Liquid Gel Compiled..."
+    else
+      echo "Failed to Compile Liquid Gel - Build Failed" >&2
+      echo "Failed to install Liquid Gel" >&2
+    fi
+
+    echo "Cleanup Liquid Gel source"
+    if rm -rf /tmp/liquid-gel; then
+      echo "Finish cleanup"
+    else
+      echo "Failed to Cleanup files" >&2
+    fi
+  fi
+
+  echo "Removing cmake and extra-cmake-modules..."
+  if ! pacman -R --noconfirm cmake extra-cmake-modules 2>> "$LOG_FILE"; then
+    echo "Warning: Failed to remove cmake/extra-cmake-modules" >&2
+  fi
+else
+  echo "No internet. Skipping Liquid Gel installation."
+fi
+
+echo "=== pearOS Installation Script Completed: $(date) ==="
+sync
+shutdown -r now

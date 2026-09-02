@@ -1,0 +1,839 @@
+:not(input):not(textarea),
+:not(input):not(textarea)::after,
+:not(input):not(textarea)::before {
+  -webkit-user-select: none;
+  user-select: none;
+  cursor: default;
+}
+
+input, button, textarea, :focus {
+  outline: none; /* You should add some other style for :focus to help UX/a11y */
+}
+
+* {
+  box-sizing: border-box;
+}
+
+#create_user {
+  margin-top: 100px;
+  margin-right: auto;
+}
+
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: "Sen";
+  font-weight: 400;
+  font-size: 14px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-image: url(../resources/background.avif);
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url(../resources/background.avif);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(8px);
+  z-index: -2;
+  transition: filter 0.8s ease-in-out;
+}
+
+body::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: -1;
+  transition: background 0.8s ease-in-out;
+}
+
+body.hello-page::before,
+body.welcome-page::before {
+  filter: blur(0px);
+}
+
+body.hello-page::after,
+body.welcome-page::after {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+body.blur-transition::before {
+  filter: blur(8px);
+}
+
+body.blur-transition::after {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+input{
+        border:none;
+    }
+
+input:focus, textarea:focus
+{
+    border: 1px solid #1670BE;
+    box-shadow: 0 0 3px #1670BE;
+    outline-offset: 0px;
+    outline: none;
+}
+
+html {
+  height: 100%;
+}
+
+@font-face {
+  font-family: "Sen";
+  font-weight: 400;
+  src: url(../fonts/pearOS-Font-Regular.ttf);
+}
+
+h1 {
+  font-family: "Sen";
+  font-weight: 900;
+  letter-spacing: -0.053em;
+  font-size: 20px;
+  margin-top: 20px;
+  margin-bottom: 0px;
+  padding: 0px;
+  color: #333333;
+  margin-left: -3px;
+  text-align: left;
+  width: 100%;
+  margin-left: 20%;
+}
+
+p, span {
+  letter-spacing: -0.038em;
+}
+
+img, a {
+  -webkit-user-drag: none;
+}
+
+.worldmap {
+  margin-left: 0.11em;
+  margin-top: 70px;
+  height: 70px;
+}
+
+.flex-container {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.app {
+  width: 800px;
+  height: 600px;
+  /* background: linear-gradient(to bottom, #ffffff, #ebebeb); */
+  background-color: #ffffff;
+  position: relative;
+  border-radius: 10px;
+}
+
+.countries {
+  margin-top: 10px;
+}
+
+#create_user {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: auto;
+  width: 100%;
+  max-width: 400px;
+  position: absolute;
+  top: 185%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Aliniere la stânga pentru titlul din pagina de user */
+.tab.active h1 {
+  text-align: left;
+  align-self: flex-start;
+  width: 100%;
+  padding-left: 20px;
+  padding-top: 50px;
+}
+
+#create_user form {
+  display: flex;
+  flex-direction: column;
+  /* align-items: center; */
+  gap: 10px;
+  width: 100%;
+}
+
+#create_user .textbox {
+  width: 300px;
+  padding: 8px 15px;
+  font-size: 14px;
+  border: 1px solid #c5c5c5;
+  border-radius: 8px;
+  background-color: #fbfbfb;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  height: 26px;
+}
+
+#create_user .textbox:focus {
+  border-color: #57a2ff;
+  box-shadow: 0 0 0 3px rgba(87, 162, 255, 0.1);
+  outline: none;
+}
+
+#create_user .textbox::placeholder {
+  color: #999;
+}
+
+#create_user .account-name-hint {
+  font-size: 12px;
+  color: #666;
+  margin-top: -5px;
+  margin-bottom: 5px;
+  text-align: left;
+  width: 300px;
+}
+
+.password-row {
+  display: flex;
+  gap: 15px;
+  align-items: flex-start;
+}
+
+.password-row .textbox {
+  width: 142px;
+}
+
+.password-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 8px;
+  font-size: 13px;
+  min-height: 20px;
+}
+
+.password-check.match {
+  color: #28a745;
+}
+
+.password-check.mismatch {
+  color: #dc3545;
+}
+
+.password-check-icon {
+  margin-right: 5px;
+  font-size: 16px;
+}
+
+.list {
+  width: 350px;
+  height: 200px;
+  display: block;
+  font-size: 14px;
+  letter-spacing: -0.01em;
+  word-spacing: 0.1em;
+  font-family: inherit;
+  border: 1px solid #c5c5c5;
+  border-radius: 1px;
+  overflow-y: auto;
+  text-align: center;
+}
+
+.list:focus {
+  box-shadow: 0 0 1px 3px #57a2ff;
+}
+
+.list::-webkit-scrollbar {
+  width: 15px;
+}
+
+.list::-webkit-scrollbar-track {
+  background-color: #fbfbfb;
+  border-left: 1px solid #ececec;
+}
+
+.list::-webkit-scrollbar-track:hover {
+  background-color: #fafafa;
+}
+
+.list::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  background-color: #c1c1c1;
+  border-width: 3px 3px 3px 4px;
+  border-style: solid;
+  border-color: transparent;
+  background-clip: content-box;
+}
+
+.list::-webkit-scrollbar-thumb:hover {
+  background-color: #7d7d7d;
+}
+
+option {
+  padding-left: 4px;
+  padding-top: 2px;
+  text-align: center;
+}
+
+.description {
+  margin-top: 0px;
+  font-size: 15px;
+  color: #818181;
+  margin-left: 1%;
+}
+
+.tab {
+  display: none;
+}
+
+.tab.active {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  flex: 1;
+  position: relative;
+}
+
+hr {
+    opacity: 0.2;
+}
+
+.arrow-button-container {
+  display: inline-block;
+  margin-left: -40px;
+  margin-right: 20px;
+  color: white;
+}
+
+/* Butonul Back ca săgeată SVG în colțul din stânga sus */
+#move-back-btn {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: transparent;
+  border: none;
+  padding: 12px;
+  cursor: pointer;
+  z-index: 1000;
+  box-shadow: none;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#move-back-btn:hover {
+  background: transparent;
+  opacity: 0.7;
+}
+
+#move-back-btn svg {
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+}
+
+#move-back-btn svg path {
+  fill: #0570fb;
+  stroke: none;
+}
+
+/* Ascunde butonul Back pe pagina de selecție a limbii */
+#language-selection-page .movement-buttons #move-back-btn {
+  display: none;
+}
+
+.movement-buttons {
+  margin-top: auto;
+  position: absolute;
+  bottom: 20px;
+  width: 100%;
+  text-align: right;
+}
+
+.button {
+  background-color: #FFFFFF;
+  border: none;
+  color: black;
+  border-radius: 8px;
+  text-align: center;
+  cursor: pointer;
+  padding: 5px 10px 5px 10px;
+  margin-left: 30px;
+}
+
+.column {
+  float: left;
+  width: 30%;
+  padding: 10px;
+}
+
+.row {
+  width: 30%;
+  height: 30%;
+}
+
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+.td {
+  border: 1px solid black;
+  text-align: center;
+  padding: 10px;
+}
+
+.license {
+  width: 80%;
+  height: 350px;
+  color: #808080;
+  overflow: scroll;
+}
+
+
+input{
+        border:1px solid #000000;
+	margin-left: 5px;
+    }
+
+input:focus, textarea:focus
+{
+    border: 0px solid #1670BE;
+    box-shadow: 0 0 1px 3px #57a2ff;
+    outline-offset: 0px;
+    outline: none;
+}
+
+label {
+  display: inline-block;
+  float: left;
+  width: 200px;
+  text-align: right;
+}
+
+.hello__div {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  margin: 0 auto;
+  text-align: center;
+  width: 100vw;
+  height: 100vh;
+  padding: 2rem;
+  position: relative;
+}
+
+.hello-button-container {
+  margin-top: 3rem;
+}
+
+.hello__svg {
+  fill: none;
+  stroke: #fff;
+  stroke-linecap: round;
+  stroke-miterlimit: 10;
+  stroke-width: 48px;
+  stroke-dasharray: 5800px;
+  stroke-dashoffset: 5800px;
+  animation: anim__hello linear 5s forwards;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  margin: 0 auto;
+  text-align: center;
+}
+
+@keyframes anim__hello {
+  0% {
+    stroke-dashoffset: 5800;
+  }
+  25% {
+    stroke-dashoffset: 5800;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.nav-button {
+  background-color: #ffffff;
+  border: none;
+  color: rgb(43, 43, 43);
+  border-radius: 50px;
+  text-align: center;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, opacity 0.3s ease;
+  box-shadow: -1px 11px 20px 1px rgb(0 0 0 / 24%);
+}
+
+.nav-button:hover:not(:disabled) {
+  opacity: 0.8;
+}
+
+.nav-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.hello-stroke,
+.welcome-stroke {
+  filter: 
+    blur(0.5px)
+    contrast(1.2)
+    brightness(1.1)
+    saturate(1.3);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  transition: all 0.3s ease;
+  animation: liquidDistortion 3s ease-in-out infinite alternate;
+  opacity: 0.6;
+}
+
+.welcome__div {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  margin: 0 auto;
+  text-align: center;
+  width: 100vw;
+  height: 100vh;
+  padding: 2rem;
+  position: relative;
+}
+
+.welcome-button-container {
+  margin-top: 3rem;
+}
+
+.welcome__svg {
+  fill: none;
+  stroke: #fff;
+  stroke-linecap: round;
+  stroke-miterlimit: 10;
+  stroke-width: 48px;
+  stroke-dasharray: 5800px;
+  stroke-dashoffset: 5800px;
+  animation: anim__welcome linear 5s forwards;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  margin: 0 auto;
+  text-align: center;
+}
+
+@keyframes anim__welcome {
+  0% {
+    stroke-dashoffset: 5800;
+  }
+  25% {
+    stroke-dashoffset: 5800;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+
+@keyframes liquidDistortion {
+  0% {
+    filter: 
+      blur(0.3px)
+      contrast(1.1)
+      brightness(1.05)
+      saturate(1.2);
+    backdrop-filter: blur(1px);
+    -webkit-backdrop-filter: blur(1px);
+  }
+  50% {
+    filter: 
+      blur(0.8px)
+      contrast(1.3)
+      brightness(1.15)
+      saturate(1.4);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+  }
+  100% {
+    filter: 
+      blur(0.5px)
+      contrast(1.2)
+      brightness(1.1)
+      saturate(1.3);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+  }
+}
+
+/* Stiluri pentru selectorul circular de imagini de profil */
+.profile-picture-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.profile-picture-container h2 {
+  font-family: "Sen";
+  font-weight: 400;
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 15px;
+}
+
+.profile-pictures-circle {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 15px;
+  max-width: 100%;
+  padding: 20px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.profile-picture-item {
+  width: 80px;
+  height: 80px;
+  min-width: 80px;
+  min-height: 80px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  border: 3px solid transparent;
+  transition: all 0.3s ease;
+  position: relative;
+  background-color: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-picture-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.profile-picture-item:hover {
+  transform: scale(1.1);
+  border-color: #57a2ff;
+  box-shadow: 0 0 10px rgba(87, 162, 255, 0.3);
+}
+
+.profile-picture-item.selected {
+  border-color: #0570fb;
+  box-shadow: 0 0 15px rgba(5, 112, 251, 0.5);
+  transform: scale(1.15);
+}
+
+.profile-picture-item.selected::after {
+  content: '✓';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background-color: #0570fb;
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+  border: 2px solid white;
+}
+
+/* ── Choose Your Look (light/dark picker) ───────────────────────────── */
+.look-picker {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 30px;
+  padding: 20px;
+}
+
+.look-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 10px;
+  border-radius: 14px;
+  border: 3px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.look-option:hover {
+  border-color: #57a2ff;
+  box-shadow: 0 0 10px rgba(87, 162, 255, 0.3);
+}
+
+.look-option.selected {
+  border-color: #0570fb;
+  box-shadow: 0 0 15px rgba(5, 112, 251, 0.5);
+}
+
+.look-preview {
+  width: 160px;
+  height: 100px;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.look-preview-light {
+  background: linear-gradient(160deg, #e8ecf3 0%, #cfd8e6 100%);
+}
+
+.look-preview-dark {
+  background: linear-gradient(160deg, #2b2f38 0%, #15171c 100%);
+}
+
+.look-preview-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 12px;
+}
+
+.look-preview-light .look-preview-bar {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.look-preview-dark .look-preview-bar {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.look-preview-dock {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 70%;
+  height: 16px;
+  border-radius: 8px;
+}
+
+.look-preview-light .look-preview-dock {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.look-preview-dark .look-preview-dock {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.look-option span {
+  font-family: "Sen";
+  font-size: 14px;
+  color: #333;
+}
+
+.look-note {
+  max-width: 420px;
+  margin: 10px auto 0;
+  padding: 0 20px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #818181;
+  text-align: center;
+}
+
+/* ── Dark mode (applies to the wizard window itself, live) ──────────── */
+body.dark-mode .app {
+  background-color: #1e1f24;
+  transition: background-color 0.3s ease;
+}
+
+body.dark-mode h1 {
+  color: #f2f2f2;
+}
+
+body.dark-mode .description,
+body.dark-mode .look-note,
+body.dark-mode .account-name-hint,
+body.dark-mode .profile-picture-container h2 {
+  color: #9a9aa2;
+}
+
+body.dark-mode .look-option span {
+  color: #e6e6e6;
+}
+
+body.dark-mode #create_user .textbox,
+body.dark-mode .list {
+  background-color: #2a2b31;
+  border-color: #3d3e46;
+  color: #f2f2f2;
+}
+
+body.dark-mode #create_user .textbox::placeholder {
+  color: #7a7a82;
+}
+
+body.dark-mode .list::-webkit-scrollbar-track {
+  background-color: #2a2b31;
+  border-left: 1px solid #3d3e46;
+}
+
+body.dark-mode .list::-webkit-scrollbar-thumb {
+  background-color: #55565f;
+}
+
+body.dark-mode option {
+  background-color: #2a2b31;
+  color: #f2f2f2;
+}
+
+body.dark-mode .button,
+body.dark-mode .nav-button {
+  background-color: #3a3b42;
+  color: #f2f2f2;
+}
+
+body.dark-mode #move-back-btn svg path {
+  fill: #57a2ff;
+}
+
+body.dark-mode .license {
+  color: #b0b0b8;
+}

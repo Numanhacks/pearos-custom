@@ -1,0 +1,10 @@
+' Gambas module file
+
+Public Sub dark()
+  Shell "plasma-apply-wallpaperimage /usr/share/wallpapers/pearOS-dark/contents/images/2560x1440.png" Wait
+End
+
+
+Public Sub light()
+  Shell "plasma-apply-wallpaperimage /usr/share/wallpapers/pearOS/contents/images/2560x1440.png" Wait
+End

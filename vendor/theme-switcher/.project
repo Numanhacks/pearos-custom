@@ -1,0 +1,22 @@
+# Gambas Project File 3.0
+Startup=FMain
+Version=0.0.8
+Component=gb.image
+Component=gb.gtk3
+Component=gb.form
+Description="Switch between dark and light theme. Hopefully, the gtk switch works too, idk"
+TabSize=2
+Language=en_US
+SourcePath=/home/pear/Desktop/new
+Maintainer=Alexandru Balan
+Vendor=PearProject
+Address=pear@PearBook
+License=Lesser General Public License
+PackageName=themesw-0.0.1
+PackageVersion=11
+RuntimeVersion="3.15"
+Packager=1
+Systems=ubuntu
+Menus=ubuntu:"Applications/System/Administration"
+Categories=ubuntu:"System"
+Groups=ubuntu:"kde"
