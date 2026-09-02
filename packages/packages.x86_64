@@ -243,6 +243,8 @@ python-pip
 system-settings
 touchegg
 gamemode
+dpkg
+packagekit-qt6
 #appmenu-gtk-module
 file-roller
 nautilus

@@ -213,7 +213,9 @@ echo "Applying pearOS optimization stack (memory/performance/desktop-experience)
 # The repo stores these scripts 0644 (Windows checkout); make them executable.
 chmod +x /usr/local/bin/pearos-opt-bootstrap /usr/local/bin/pear-ui-polish \
          /usr/local/bin/install-surface-support /usr/local/bin/pearos-update \
+         /usr/local/bin/pearos-doctor /usr/local/bin/pearos-pkg-install \
          /usr/local/lib/pearos-opt/*.sh 2>/dev/null || true
+update-desktop-database /usr/share/applications 2>/dev/null || true
 if /usr/local/bin/pearos-opt-bootstrap; then
 	echo "Optimization stack applied"
 else

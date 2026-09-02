@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=pearOS Package Installer
+GenericName=Install Linux app packages
+Exec=/usr/local/bin/pearos-pkg-install %f
+NoDisplay=true
+Terminal=false
+MimeType=application/vnd.debian.binary-package;application/vnd.appimage;application/x-appimage;application/x-pkg;
+StartupNotify=true

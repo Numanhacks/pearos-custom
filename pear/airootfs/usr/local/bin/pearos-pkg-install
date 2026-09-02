@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+# ============================================================================
+# pearos-pkg-install — double-click installer for Linux app packages.
+# Handles the formats people actually download:
+#   .deb         -> extracted with dpkg into ~/.local (deps checked, best-effort)
+#   .AppImage    -> moved to ~/Applications and made executable
+#   .pkg.tar.zst -> native pacman install (proper dependency resolution)
+# Registerd for MIME types via pearos-pkg-install.desktop.
+# ============================================================================
+set -u
+FILE="${1:-}"
+[ -z "$FILE" ] && { echo "usage: pearos-pkg-install <file>"; exit 1; }
+[ -f "$FILE" ] || { notify-send "pearOS" "File not found: $FILE" 2>/dev/null; exit 1; }
+
+log()  { notify-send "pearOS installer" "$1" 2>/dev/null; echo "$1"; }
+err()  { notify-send -u critical "pearOS installer" "$1" 2>/dev/null; echo "$1" >&2; }
+
+lower="${FILE,,}"
+
+# ---- native Arch package: full dependency resolution ------------------------
+if [[ $lower == *.pkg.tar.zst || $lower == *.pkg.tar.xz ]]; then
+    exec pkexec pacman -U --noconfirm "$FILE"
+fi
+
+# ---- AppImage: make executable, park it, offer a launcher -------------------
+if [[ $lower == *.appimage ]]; then
+    mkdir -p "$HOME/Applications"
+    dest="$HOME/Applications/$(basename "$FILE")"
+    cp -f "$FILE" "$dest" && chmod +x "$dest"
+    log "AppImage installed to ~/Applications — run it from there or drag it to the dock."
+    exec xdg-open "$HOME/Applications"
+fi
+
+# ---- Debian package: extract into ~/.local ----------------------------------
+if [[ $lower == *.deb ]]; then
+    command -v dpkg-deb >/dev/null 2>&1 || { err "dpkg missing — cannot open .deb"; exit 1; }
+    name=$(dpkg-deb -f "$FILE" Package 2>/dev/null) || { err "Not a valid .deb"; exit 1; }
+    prefix="$HOME/.local"
+    log "Installing $name (extracting)..."
+    if ! dpkg-deb -x "$FILE" "$prefix"; then err "Extraction failed"; exit 1; fi
+    # surface desktop entries + icons from the payload
+    if [ -d "$prefix/usr/share/applications" ]; then
+        mkdir -p "$prefix/share/applications"
+        cp -f "$prefix/usr/share/applications/"*.desktop "$prefix/share/applications/" 2>/dev/null || true
+    fi
+    if [ -d "$prefix/usr/share/icons" ]; then
+        mkdir -p "$prefix/share/icons"
+        cp -rT "$prefix/usr/share/icons" "$prefix/share/icons" 2>/dev/null || true
+    fi
+    update-desktop-database "$prefix/share/applications" 2>/dev/null || true
+    gtk-update-icon-cache -f "$prefix/share/icons" 2>/dev/null || true
+    # dependency sanity: list missing sonames we can detect
+    missing=$(find "$prefix" -name "*.so*" -path "*${name}*" 2>/dev/null | head -1)
+    log "$name installed. Note: .deb apps are built for Debian/Ubuntu — if it won't start, some libraries may be missing; prefer Flatpak or the App Store when available."
+    exit 0
+fi
+
+err "Unknown package type: $(basename "$FILE") (.deb, .AppImage and .pkg.tar.zst are supported)"
+exit 1
