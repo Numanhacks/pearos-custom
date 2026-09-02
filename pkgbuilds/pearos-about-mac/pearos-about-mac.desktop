@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=About This Mac
+Comment=pearOS system information
+Exec=pearos-about-mac
+Icon=pearos-about-mac
+Terminal=false
+Type=Application
+Categories=System;
+StartupWMClass=pearos-about-mac

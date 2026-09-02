@@ -39,16 +39,10 @@ welcomeExpandingLogo:   true
 #  - "normal" or unset, expand as needed, use *windowSize*
 #  - "fullscreen", start as large as possible, ignore *windowSize*
 #  - "noexpand", don't expand automatically, use *windowSize*
-windowExpanding:    fullscreen
+windowExpanding:    noexpand
 
-# Size of Calamares window, expressed as w,h. Both w and h
-# may be either pixels (suffix px) or font-units (suffix em).
-#   e.g.    "800px,600px"
-#           "60em,480px"
-# This setting is ignored if "fullscreen" is selected for
-# *windowExpanding*, above. If not set, use constants defined
-# in CalamaresUtilsGui, 800x520.
-#windowSize: 1100px,520px
+# Size of Calamares window — 900x600 fixes slowness in VMs, not fullscreen
+windowSize: 900px,600px
 
 # Placement of Calamares window. Either "center" or "free".
 # Whether "center" actually works does depend on the window

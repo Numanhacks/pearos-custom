@@ -1,0 +1,7 @@
+module AquaUI
+AquaButton 1.0 AquaButton.qml
+AquaWindow 1.0 AquaWindow.qml
+AquaSidebar 1.0 AquaSidebar.qml
+AquaGlassPane 1.0 AquaGlassPane.qml
+AquaTableView 1.0 AquaTableView.qml
+AquaSearchField 1.0 AquaSearchField.qml

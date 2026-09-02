@@ -17,11 +17,44 @@ set -uo pipefail
 REPO_RAW="https://raw.githubusercontent.com/Numanhacks/pearos-custom/main"
 OPT_LIB="/usr/local/lib/pearos-opt"
 FULL=0
-[ "${1:-}" = "--full" ] && FULL=1
+DRY_RUN=0
+for arg in "$@"; do
+    case "$arg" in
+        --full) FULL=1 ;;
+        --dry-run) DRY_RUN=1 ;;
+    esac
+done
 
 log()  { echo -e "\033[92m[pearos-update]\033[0m $*"; }
 warn() { echo -e "\033[93m[pearos-update]\033[0m $*"; }
+
+if (( DRY_RUN )); then
+    log "[dry-run] would sync optimization suite + UI plasmoids (no files touched)"
+fi
+
 [ "$(id -u)" -eq 0 ] || { warn "Run as root: sudo pearos-update"; exit 1; }
+
+sync_plasmoid_qml() {
+    local src_prefix="$1"
+    local inst_base="$2"
+    local inst_ui="$inst_base/contents/ui"
+    mkdir -p "$inst_ui" 2>/dev/null || true
+    local files="main.qml Task.qml TaskBadgeOverlay.qml TaskProgressOverlay.qml GroupDialog.qml ContextMenu.qml PulseAudio.qml code/LayoutMetrics.js code/TaskTools.js code/DockZoom.js"
+    for rel in $files metadata.json; do
+        local url="$REPO_RAW/$src_prefix/$rel"
+        local dest="$inst_ui/$rel"
+        if ! curl -fsSL -I "$url" >/dev/null 2>&1; then
+            warn "  -> $rel not found at $url (skip)"
+            continue
+        fi
+        mkdir -p "$(dirname "$dest")"
+        if curl -fsSL --retry 2 -o "$dest" "$url"; then
+            log "  -> synced $rel"
+        else
+            warn "  -> could not fetch $rel (skip)"
+        fi
+    done
+}
 
 mkdir -p "$OPT_LIB"
 
@@ -46,9 +79,16 @@ surface-support/install-surface-support.sh"
 FAIL=0
 for f in $FILES; do
     dest="$OPT_LIB/$(basename "$f")"
-    curl -fsSL --retry 3 -o "$dest" "$REPO_RAW/$f" \
-        && chmod +x "$dest" 2>/dev/null \
-        || { warn "could not fetch $f"; FAIL=1; }
+    if (( DRY_RUN )); then
+        echo "[dry-run] curl -fsSL --retry 3 -o $dest $REPO_RAW/$f"
+        continue
+    fi
+    if ! curl -fsSL --retry 3 -o "$dest" "$REPO_RAW/$f"; then
+        warn "could not fetch $f (404 or network) — skipping"
+        FAIL=1
+        continue
+    fi
+    chmod +x "$dest" 2>/dev/null || true
 done
 if (( FAIL )); then
     warn "some files failed to download — continuing with what we got"
@@ -69,6 +109,42 @@ if [ -f /usr/local/bin/pear-ui-polish ]; then
     log "Refreshing macOS theming for all users..."
     bash /usr/local/bin/pear-ui-polish --config-only 2>/dev/null \
         || bash /usr/local/bin/pear-ui-polish 2>/dev/null || true
+fi
+
+# ---- 3b) Ship UI component changes (dock/notch/plasmoids) -------------------
+# The dock is a QML plasmoid (PearDock); notch is a standalone Qt app.
+# Sync installed copies from the build repo so interface fixes land without a
+# reflash, then restart plasmashell. Resilient: 404 is a warning, not a crash.
+if (( DRY_RUN )); then
+    log "[dry-run] would sync PearDock QML: pkgbuilds/pearos-dock/package/contents/ui -> /usr/share/plasma/plasmoids/PearDock/contents/ui/"
+else
+    # PearDock — CORRECT id is PearDock (not org.kde.plasma.pearos-dock)
+    if [ -d /usr/share/plasma/plasmoids/PearDock ] || [ -d /usr/share/plasma/plasmoids/PearDock/contents ]; then
+        log "Syncing PearDock from build repo..."
+        sync_plasmoid_qml "pkgbuilds/pearos-dock/package/contents/ui" "/usr/share/plasma/plasmoids/PearDock" \
+            || sync_plasmoid_qml "vendor/pkgbuilds/pearos-dock/package/contents/ui" "/usr/share/plasma/plasmoids/PearDock" \
+            || warn "  -> could not sync PearDock (still using installed version)"
+    else
+        mkdir -p /usr/share/plasma/plasmoids/PearDock/contents/ui 2>/dev/null || true
+        log "Syncing PearDock (creating target dir)..."
+        sync_plasmoid_qml "pkgbuilds/pearos-dock/package/contents/ui" "/usr/share/plasma/plasmoids/PearDock" 2>/dev/null \
+            || sync_plasmoid_qml "vendor/pkgbuilds/pearos-dock/package/contents/ui" "/usr/share/plasma/plasmoids/PearDock" 2>/dev/null \
+            || warn "  -> PearDock sync attempted (target was missing, may need reinstall)"
+    fi
+
+    # PearNotch — standalone app, not a plasmoid; just warn if missing and skip gracefully
+    if [ -f /usr/bin/pearos-notch ] || [ -d /usr/share/plasma/plasmoids/pearos-notch ] || [ -d /usr/share/plasma/plasmoids/PearNotch ]; then
+        log "pearos-notch is a standalone app (/usr/bin/pearos-notch) — skipping QML plasmoid sync (app updates via package upgrade)"
+    fi
+fi
+# restart the shell so QML changes take effect immediately
+if (( DRY_RUN )); then
+    log "[dry-run] would run: kquitapp6 plasmashell && sleep 2 && kstart plasmashell &"
+else
+    if command -v kquitapp6 >/dev/null 2>&1 && command -v kstart >/dev/null 2>&1; then
+        log "Restarting plasmashell to apply interface changes..."
+        kquitapp6 plasmashell 2>/dev/null; sleep 2; kstart plasmashell >/dev/null 2>&1 & disown || true
+    fi
 fi
 
 # ---- 4) Package upgrades -----------------------------------------------------

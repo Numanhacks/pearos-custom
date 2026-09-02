@@ -1,0 +1,17 @@
+pkgname=pearos-about-mac
+pkgver=26.1
+pkgrel=1
+pkgdesc="About This Mac dialog for pearOS"
+arch=('x86_64')
+url="https://pearos.xyz"
+license=('GPL3')
+depends=('qt6-base' 'qt6-declarative' 'qt6-svg')
+makedepends=('cmake' 'ninja' 'qt6-base' 'qt6-declarative')
+source=()
+build() {
+  cmake -B build -S "$startdir" -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr
+  cmake --build build -j$(nproc)
+}
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+}

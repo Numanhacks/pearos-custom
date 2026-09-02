@@ -1,0 +1,12 @@
+pkgname=pearos-launchpad
+pkgver=26.1
+pkgrel=1
+pkgdesc="Fullscreen app grid (Launchpad) for pearOS"
+arch=('x86_64')
+url="https://pearos.xyz"
+license=('GPL3')
+depends=('qt6-base' 'qt6-declarative')
+makedepends=('cmake' 'ninja')
+source=()
+build() { cmake -B build -S "$startdir" -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr; cmake --build build -j$(nproc); }
+package() { DESTDIR="$pkgdir" cmake --install build; install -Dm644 "$startdir/pearos-launchpad.desktop" "$pkgdir/usr/share/applications/pearos-launchpad.desktop"; }

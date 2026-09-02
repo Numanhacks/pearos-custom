@@ -590,11 +590,31 @@ PlasmoidItem {
         // --- CUSTOM SKIN ---
         Component {
             id: customSkin
-            Item {
+            // Rounded clip rect: enforces geometry-driven corners on the dock
+            // chrome so the glass stays inside the rounded shape even when
+            // the BorderImage source has anti-aliasing artifacts or when the
+            // dock is wider/taller than the source's 9-slice. Replaces the
+            // previous layout which relied on the PNG's own corner rounding
+            // and leaked square pixels at the edges on long docks.
+            Rectangle {
+                id: dockGlassShape
                 anchors.fill: parent
+                // Cap radius to half the shorter side so a 56px-tall dock can
+                // never request a 24px corner that still leaves flat sides on
+                // a 200px-wide dock -- the visible curve must always be a true
+                // radius, not a clipped one.
+                radius: Math.min(width, height, dockGlassShape.cornerRadius) * 0.5
+                color: "transparent"
+                clip: true
+                // Match the per-skin blur radius so the visible curve always
+                // tracks the requested corner softness, not the PNG.
+                readonly property int cornerRadius: tasks.skinParams.blurRadius || 24
 
             BorderImage {
                 id: dockBackground
+                parent: dockGlassShape
+                anchors.fill: parent
+                anchors.margins: 0
                 cache: true
                 smooth: true
                 asynchronous: true

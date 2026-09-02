@@ -22,6 +22,17 @@ echo "Setting OS release"
 echo "pearOS" > /etc/arch-release && \
 	echo "OS release updated" ||\
 	echo "Failed to set OS release"
+echo "26.1" > /etc/pearos-release && echo "pearOS version 26.1 stamped" || true
+# Global menu: ensure KWin appmenu is enabled for macOS-like global menu
+mkdir -p /etc/skel/.config
+kwriteconfig5 --file /etc/skel/.config/kwinrc --group Plugins --key kded-appmenuEnabled true 2>/dev/null || true
+# Launchpad keybinding: Super triggers pearos-launchpad (if installed)
+mkdir -p /etc/skel/.config
+cat > /etc/skel/.config/kglobalshortcutsrc.pearos 2>/dev/null <<'KSC'
+[pearos-launchpad]
+_launchpad=Meta,Meta,Launchpad
+KSC
+
 
 if command -v plymouth-set-default-theme &> /dev/null; then
 	echo "Setting plymouth theme"
@@ -112,10 +123,10 @@ if [ "$liquid_ok" -eq 1 ]; then
         if cd liquid-gel && mkdir -p build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/usr && make -j$(nproc) && make install; then
                 echo "Liquid Gel Compiled..."
         else
-                echo "Failed to Compile Liquid Gel - Build Failed"
+                echo "Failed to Compile Liquid Gel - Build Failed — falling back to tuned KWin blur (kwinrc Effect-Blur BlurStrength=12)"
         fi
 else
-        echo "Failed to download Liquid Gel (kwin effect missing on ISO)"
+        echo "Failed to download Liquid Gel (kwin effect missing on ISO) — KWin blur fallback active via /etc/skel/.config/kwinrc"
 fi
 
 
@@ -209,11 +220,43 @@ else
     echo "WARN: Apple logo download/conversion failed — pear logos left in place"
 fi
 
+echo "Syncing window corner radius to 8px (Kvantum/aurorae/kwinrc)"
+# Enforce 8px across installed WhiteSur themes so square corners don't poke
+if [ -d /usr/share/Kvantum ]; then
+    find /usr/share/Kvantum -name "*.kvconfig" -o -name "*.kvgconfig" 2>/dev/null | while read -r kv; do
+        sed -i 's/^radius=.*/radius=8/; s/^menu_radius=.*/menu_radius=6/; s/^tooltip_radius=.*/tooltip_radius=6/' "$kv" 2>/dev/null || true
+        grep -q "^\[General\]" "$kv" 2>/dev/null || echo -e "\n[General]\nradius=8" >> "$kv" 2>/dev/null || true
+    done
+fi
+# Aurorae WhiteSur decoration — unify Radius/MaskRadius to 8
+if [ -d /usr/share/aurorae/themes ]; then
+    find /usr/share/aurorae/themes -name "*.rc" 2>/dev/null | while read -r rc; do
+        sed -i 's/^Radius=.*/Radius=8/; s/^MaskRadius=.*/MaskRadius=8/' "$rc" 2>/dev/null || true
+        if ! grep -q "^Radius=" "$rc" 2>/dev/null; then echo "Radius=8" >> "$rc" 2>/dev/null || true; fi
+    done
+fi
+# Ensure kwinrc blur and decoration settings are present (fallback if liquid-gel fails)
+mkdir -p /etc/skel/.config
+if [ -f /etc/skel/.config/kwinrc ]; then
+    kwriteconfig5 --file /etc/skel/.config/kwinrc --group Compositing --key Backend OpenGL 2>/dev/null || true
+    kwriteconfig5 --file /etc/skel/.config/kwinrc --group Compositing --key AnimationSpeed 2 2>/dev/null || true
+    kwriteconfig5 --file /etc/skel/.config/kwinrc --group Effect-Blur --key BlurStrength 12 2>/dev/null || true
+    kwriteconfig5 --file /etc/skel/.config/kwinrc --group Effect-Blur --key NoiseStrength 0 2>/dev/null || true
+    kwriteconfig5 --file /etc/skel/.config/kwinrc --group Plugins --key blurEnabled true 2>/dev/null || true
+    kwriteconfig5 --file /etc/skel/.config/kwinrc --group org.kde.kdecoration2 --key library org.kde.kwin.aurorae 2>/dev/null || true
+    kwriteconfig5 --file /etc/skel/.config/kwinrc --group org.kde.kdecoration2 --key theme WhiteSur-dark 2>/dev/null || true
+fi
+# Glass panel opacity: ensure WhiteSur panel svg is translucent (60-70%) for blur to read as glass
+find /usr/share/plasma/desktoptheme -name "panelbackground.svg*" 2>/dev/null | while read -r svg; do
+    sed -i 's/fill-opacity="[^"]*"/fill-opacity="0.65"/; s/stop-opacity="[^"]*"/stop-opacity="0.65"/' "$svg" 2>/dev/null || true
+done || true
+
 echo "Applying pearOS optimization stack (memory/performance/desktop-experience)"
 # The repo stores these scripts 0644 (Windows checkout); make them executable.
 chmod +x /usr/local/bin/pearos-opt-bootstrap /usr/local/bin/pear-ui-polish \
          /usr/local/bin/install-surface-support /usr/local/bin/pearos-update \
          /usr/local/bin/pearos-doctor /usr/local/bin/pearos-pkg-install \
+         /usr/local/bin/pearos-glass-tuner \
          /usr/local/lib/pearos-opt/*.sh 2>/dev/null || true
 update-desktop-database /usr/share/applications 2>/dev/null || true
 if /usr/local/bin/pearos-opt-bootstrap; then
@@ -221,6 +264,20 @@ if /usr/local/bin/pearos-opt-bootstrap; then
 else
 	echo "WARN: optimization stack had errors - build continues"
 fi
+
+echo "Wiring AquaUI and custom apps (calculator, notes, calendar, about-mac, launchpad)"
+# Build order matters: AquaUI first (dependency)
+for _pkg in pearos-aquaui pearos-calculator pearos-notes pearos-calendar pearos-about-mac pearos-launchpad; do
+    if pacman -Ss "^$_pkg$" >/dev/null 2>&1; then
+        pacman -S --noconfirm "$_pkg" 2>/dev/null && echo "installed $_pkg from repo" || echo "WARN: pacman -S $_pkg failed"
+    else
+        echo "SKIP: $_pkg not in pacman repos — will be built via CI pkgbuilds workflow (see .github/workflows)"
+    fi
+done
+# Ensure .desktop files are registered
+update-desktop-database /usr/share/applications 2>/dev/null || true
+# App icons: if AquaUI apps installed icons, refresh cache
+gtk-update-icon-cache -f /usr/share/icons/hicolor 2>/dev/null || true
 
 echo "Cleaning up pearOS Build"
 

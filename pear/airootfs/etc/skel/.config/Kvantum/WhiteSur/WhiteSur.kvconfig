@@ -1,0 +1,17 @@
+[%General]
+alt_menubar=false
+
+[General]
+radius=8
+menu_radius=6
+tooltip_radius=6
+no_window_radius=false
+contrast=0
+shadow_size=40
+
+[Hacks]
+transparent_dolphin_view=false
+transparent_menubar=false
+
+[%General]
+radius=8

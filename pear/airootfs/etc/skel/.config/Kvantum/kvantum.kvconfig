@@ -1,0 +1,8 @@
+[%General]
+theme=WhiteSur
+
+[General]
+radius=8
+menu_radius=6
+tooltip_radius=6
+no_window_radius=false

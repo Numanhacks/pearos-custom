@@ -1,0 +1,14 @@
+pkgname=pearos-aquaui
+pkgver=26.1
+pkgrel=1
+pkgdesc="Shared macOS design system QML module (AquaUI)"
+arch=('any')
+url="https://pearos.xyz"
+license=('MIT')
+depends=('qt6-declarative')
+source=()
+package() {
+  install -d "$pkgdir/usr/lib/qt6/qml/AquaUI"
+  cp -r "$startdir"/AquaUI/* "$pkgdir/usr/lib/qt6/qml/AquaUI/"
+  chmod 644 "$pkgdir/usr/lib/qt6/qml/AquaUI"/*.qml "$pkgdir/usr/lib/qt6/qml/AquaUI/qmldir" 2>/dev/null || true
+}

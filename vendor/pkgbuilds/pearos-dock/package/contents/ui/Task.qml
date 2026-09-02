@@ -92,7 +92,9 @@ PlasmaCore.ToolTipArea {
     width: Plasmoid.configuration.iconSize
     height: tasksRoot.height
 
-    // Desactivamos el recorte para que el zoom y el reflejo "vuelen" fuera
+    // Keep clip false so magnification + reflection fly outside bounds;
+    // hover artifact (line over zoomed icon) is fixed by dockGlassShape
+    // clipping in main.qml + 2px iconBox padding + icon clip wrapper below.
     clip: false
 
     // Esta propiedad la activamos desde el MouseArea del main.qml
@@ -616,25 +618,30 @@ PlasmaCore.ToolTipArea {
                 return margin;
             }
 
-            Kirigami.Icon {
-                id: icon
-
+            // Clip wrapper prevents icon pixels poking into BorderImage top edge during zoom
+            Rectangle {
+                id: iconClip
                 width: iconBox.baseRenderSize
                 height: iconBox.baseRenderSize
-
-                source: model.decoration
-
+                radius: 6
+                clip: true
+                color: "transparent"
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.bottom: parent.bottom
                 anchors.bottomMargin: tasksRoot.isTopPanel ? 0 : Kirigami.Units.smallSpacing
                 anchors.topMargin: tasksRoot.isTopPanel ? Kirigami.Units.smallSpacing : 0
-
-                transformOrigin: Item.Bottom
-
-                scale: 1 / (iconBox.baseRenderSize / iconBox.width)
-
-                smooth: true
-                antialiasing: true
+                // 2px inner padding so zoomed icon never touches panel border
+                Kirigami.Icon {
+                    id: icon
+                    width: parent.width
+                    height: parent.height
+                    source: model.decoration
+                    anchors.centerIn: parent
+                    transformOrigin: Item.Bottom
+                    scale: 1 / (iconBox.baseRenderSize / iconBox.width)
+                    smooth: true
+                    antialiasing: true
+                }
             }
 
             Item {
