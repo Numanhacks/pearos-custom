@@ -242,6 +242,7 @@ pear-calamares-config
 python-pip
 system-settings
 touchegg
+gamemode
 #appmenu-gtk-module
 file-roller
 nautilus

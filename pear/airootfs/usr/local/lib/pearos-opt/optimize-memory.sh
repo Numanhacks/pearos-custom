@@ -177,6 +177,7 @@ log "Installing MGLRU/polish + preload units..."
 install -Dm644 "$SCRIPT_DIR/pearos-memory-polish.service" /etc/systemd/system/pearos-memory-polish.service
 install -Dm755 "$SCRIPT_DIR/pearos-preload.sh" /usr/local/lib/pearos-opt/pearos-preload.sh
 install -Dm644 "$SCRIPT_DIR/pearos-preload.service" /etc/systemd/system/pearos-preload.service
+[ -f "$SCRIPT_DIR/99-pearos-net.conf" ] && install -Dm644 "$SCRIPT_DIR/99-pearos-net.conf" /etc/sysctl.d/99-pearos-net.conf
 systemctl daemon-reload 2>/dev/null || true
 systemctl enable pearos-memory-polish.service 2>/dev/null || warn "memory-polish enable failed."
 systemctl enable pearos-preload.service 2>/dev/null || warn "preload enable failed."
